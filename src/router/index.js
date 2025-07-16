@@ -154,9 +154,9 @@ router.beforeEach((to, from, next) => {
       header.classList.remove('hide-header')
     }
   }
-  if (to.meta.guest && authStore.isAuthenticated) {
-    next({ name : 'dashboardh'})
-  }
+  // if (to.meta.guest && authStore.isAuthenticated) {
+  //   next({ name : 'dashboardh'})
+  // }
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login' })
   } 

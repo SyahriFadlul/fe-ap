@@ -27,7 +27,7 @@ const protectedRoutes = [
 ]
 
 const unprotectedRoutes = [
-    { url: 'login', methods: ['POST'] },
+    { url: 'api/login', methods: ['POST'] },
 ]
 
 axios.interceptors.request.use(function (config) {
@@ -35,19 +35,10 @@ axios.interceptors.request.use(function (config) {
     nProgress.start()
 
     const authStore = useAuthStore()
-    const isUnprotected = unprotectedRoutes.some( route =>  //cek route yg sdg akses terproteksi atw tidak
-        config.url.startsWith(route.url) && route.methods.includes(config.method.toUpperCase())
-    )        
     
-    if ( !isUnprotected && authStore.token){
+    if (config.url !== unprotectedRoutes.url){
         config.headers.Authorization = `Bearer ${authStore.token}`
-        // console.log(config.url + " : protectedroute");
-        
-    } 
-    // else {
-    //     console.log(config.url + " : not protectedroute");
-    //     console.log(authStore.token);
-    // }
+    }
     
     return config
     }, function (error) {

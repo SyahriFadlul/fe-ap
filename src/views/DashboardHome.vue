@@ -144,7 +144,7 @@ const option2 = {
 
 
 onMounted( async () => {
-    await authStore.getUser()
+    // await authStore.getUser()
 })
 </script>
 <template>

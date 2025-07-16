@@ -69,9 +69,9 @@ export const useAuthStore = defineStore("auth",{
         },
         async handleLogin (data){            
             this.authError = []
-            await this.getToken()
+            // await this.getToken()
             
-            await axios.post("/login", {
+            await axios.post("api/login", {
                 username:data.username,
                 password:data.password 
             })
@@ -80,7 +80,7 @@ export const useAuthStore = defineStore("auth",{
                 // console.log(res.data.message);
                 console.log(res);
                 await this.getUser()
-                this.router.push('/')
+                this.router.push('/dashboard')
                 
                 // await this.getUserInformation()                
                 // if (this.authRole === 'admin') {
