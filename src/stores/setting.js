@@ -13,5 +13,8 @@ export const useSettingStore = defineStore('setting',{
             this.isSidebarExpanded = !this.isSidebarExpanded
             console.log(this.isSidebarExpanded);
         }
-    }
+    },
+    persist: {
+        storage: localStorage
+    },
 })

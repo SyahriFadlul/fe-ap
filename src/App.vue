@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import Sidebar from './views/components/Sidebar.vue';
+import Sidebar from './components/Sidebar.vue';
 import { IconMenu2, IconRefresh, IconBell } from '@tabler/icons-vue'
 import { useRoute } from 'vue-router';
 import { watch, ref, onMounted } from 'vue';

@@ -10,8 +10,15 @@ const categoryStore = useCategoryStore()
 const unitStore = useUnitStore()
 
 onMounted( async ()=>{
-  await categoryStore.getCategories()
-  await unitStore.getUnits()
+  if (categoryStore.categoryItems.length < 1) {
+    await categoryStore.getCategories()    
+  }
+  if (unitStore.unitItems.length < 1){
+    await unitStore.getUnits()
+  }
+  if (goodsStore.goodsItems.length < 1){
+    await goodsStore.getGoods() 
+  } 
 
     
 })

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { defineStore } from "pinia";
 
-export const useoutgoingGoodsStore = defineStore('outgoingGoods',{
+export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
     state: () => ({
         outgoingGoodsList: [],
         pagination: {
@@ -21,11 +21,11 @@ export const useoutgoingGoodsStore = defineStore('outgoingGoods',{
             .then( (res) => {       
                 console.log(res.data.data)                
                 this.outgoingGoodsList = res.data.data
-                this.pagination.currentPage = res.data.current_page
-                this.pagination.perPage = res.data.per_page
-                this.pagination.totalItems = res.data.total
-                this.pagination.totalPage = res.data.to
-                this.pagination.lastPage = res.data.last_page
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.to
+                this.pagination.lastPage = res.data.meta.last_page
             })
             .catch( err => console.log(err))            
         },
@@ -46,5 +46,8 @@ export const useoutgoingGoodsStore = defineStore('outgoingGoods',{
             })
             .catch( err => console.log(err))
         },
-    }
+    },
+    persist: {
+        storage: localStorage
+    },
 })

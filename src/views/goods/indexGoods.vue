@@ -1,7 +1,7 @@
 <script setup>
 import { useGoodsStore } from '@/stores/goods'
-import { onMounted, ref, nextTick } from 'vue'
-import baseTable from '../components/baseTable.vue'
+import { onMounted, ref, watch } from 'vue'
+import baseTable from '../../components/baseTable.vue'
 import Paginate from 'vuejs-paginate-next';
 import { IconDownload, IconBox, IconPlus } from '@tabler/icons-vue'
 import { use } from 'echarts/core'
@@ -10,8 +10,11 @@ import { PieChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import VChart from 'vue-echarts' 
 import { CountTo } from 'vue3-count-to';
+import debounce from 'lodash.debounce';
 
 const goodsStore = useGoodsStore()
+
+const page = 10
 
 use([
   CanvasRenderer,
@@ -82,15 +85,16 @@ const columns = [
 ];
 
 // changePage(page)
-function clickCallback(){
-
+async function clickCallback(page){
+  await goodsStore.getGoods(page)  
 }
 
 const currentPage = ref(1);
 
 onMounted( async ()=>{
-  await goodsStore.getGoods()
-  console.log(goodsStore.goodsList.data);
+  if(goodsStore.goodsItems.length < 1){
+    await goodsStore.getGoods()
+  }
     
 })
 </script>
@@ -130,6 +134,7 @@ onMounted( async ()=>{
     </div>
 
     <paginate
+      v-model="page"
       :page-count="goodsStore.pagination.totalPage"
       :page-range="3"
       :margin-pages="3"

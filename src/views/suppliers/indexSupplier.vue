@@ -1,6 +1,6 @@
 <script setup>
 import { useSupplierStore } from '@/stores/supplier';
-import baseTable from '../components/baseTable.vue';
+import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
@@ -18,7 +18,9 @@ function clickCallback(){
 }
 
 onMounted( async ()=>{
-  await supplierStore.getSuppliers()
+  if (supplierStore.supplierItems.length < 1){
+    await supplierStore.getSuppliers()
+  }
 })
 </script>
 <template>

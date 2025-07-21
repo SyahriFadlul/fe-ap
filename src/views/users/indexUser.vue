@@ -1,6 +1,6 @@
 <script setup>
 import { useUserStore } from '@/stores/user';
-import baseTable from '../components/baseTable.vue';
+import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-vue';
 

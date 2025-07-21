@@ -1,8 +1,9 @@
 <script setup>
 import { useIncomingGoodsStore } from '@/stores/incomingGoods';
 import { onMounted, ref } from 'vue';
-import baseTable from '@/views/components/baseTable.vue';
+import baseTable from '@/components/baseTable.vue';
 import { IconFilter, IconSortAscending, IconPlus } from '@tabler/icons-vue';
+import Paginate from 'vuejs-paginate-next';
 
 const incomingGoodsStore = useIncomingGoodsStore()
 
@@ -13,8 +14,20 @@ const columns = [
   { key: 'amount', label: 'Total' },
 ];
 
+const rupiahNum = function (num) {
+  let price = String(num);
+  price = price.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return price + ",00";
+};
+
+async function clickCallback(page){
+  await incomingGoodsStore.getIncomingGoodsData(page)  
+}
+
 onMounted( async () => {
-	await incomingGoodsStore.getIncomingGoodsData()
+  if (incomingGoodsStore.incomingGoodsItemList.length < 1){
+    await incomingGoodsStore.getIncomingGoodsData()
+  }
 	console.log(incomingGoodsStore.incomingGoodsItemList);
 	
 }) 
@@ -35,13 +48,27 @@ onMounted( async () => {
 			</div>
 		</div>
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
-			<baseTable :columns="columns" :data="incomingGoodsStore.incomingGoodsItemList" class="table">
+			<baseTable :columns="columns" :data="incomingGoodsStore.incomingGoodsItemList" class="table" @row-click="incomingGoodsStore.showDetails">
+				<template #amount="{item}">
+					<span>Rp.{{ rupiahNum(item.amount) }}</span>
+				</template>
 				<template #actions="{ item }">
 					<button @click="edit(item)" class="">Edit</button>
 					<button @click="remove(item)" class="">Hapus</button>
 				</template>
 			</baseTable>
-		</div>
+		</div> 
+    <paginate
+      :page-count="incomingGoodsStore.pagination.totalPage"
+      :page-range="3"
+      :margin-pages="3"
+      :click-handler="clickCallback"
+      :prev-text="'Sebelumnya'"
+      :next-text="'Selanjutnya'"
+      :container-class="'pagination'"
+      :page-class="'page-item'"
+      class="uk-margin-auto-right"
+      />
 	</div>
 </template>
 <style  scoped>
@@ -71,6 +98,12 @@ onMounted( async () => {
   font-size: 12px;
   border: 1px solid rgb(241, 226, 226);
   border-radius: 10px;
+}
+
+.pagination {
+  display: flex;
+  justify-self: end;
+  margin-top: 5px;
 }
 
 </style>

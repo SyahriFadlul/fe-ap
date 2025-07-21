@@ -1,10 +1,10 @@
 <script setup>
-import { useIncomingGoodsStore } from '@/stores/incomingGoods';
+import { useOutgoingGoodsStore } from '@/stores/outgoingGoods';
 import { onMounted, ref } from 'vue';
-import baseTable from '@/views/components/baseTable.vue';
+import baseTable from '@/components/baseTable.vue';
 import { IconFilter, IconSortAscending, IconPlus } from '@tabler/icons-vue';
 
-const incomingGoodsStore = useIncomingGoodsStore()
+const outgoingGoodsStore = useOutgoingGoodsStore()
 
 const columns = [
   { key: 'received_date', label: 'Tanggal Penerimaan' },
@@ -14,8 +14,9 @@ const columns = [
 ];
 
 onMounted( async () => {
-	await incomingGoodsStore.getIncomingGoodsData()
-	console.log(incomingGoodsStore.incomingGoodsItemList);
+	if (outgoingGoodsStore.outgoingGoodsItemList.length < 1){
+    await outgoingGoodsStore.getIncomingGoodsData()
+  }
 	
 }) 
 </script>
@@ -35,7 +36,7 @@ onMounted( async () => {
 			</div>
 		</div>
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
-			<baseTable :columns="columns" :data="incomingGoodsStore.incomingGoodsItemList" class="table">
+			<baseTable :columns="columns" :data="outgoingGoodsStore.outgoingGoodsItemList" class="table">
 				<template #actions="{ item }">
 					<button @click="edit(item)" class="">Edit</button>
 					<button @click="remove(item)" class="">Hapus</button>

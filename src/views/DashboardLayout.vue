@@ -1,21 +1,26 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import Sidebar from '@/views/components/Sidebar.vue';
+import Sidebar from '@/components/Sidebar.vue';
 import { IconMenu2, IconRefresh, IconBell } from '@tabler/icons-vue'
 import { useRoute } from 'vue-router';
-import { watch, ref } from 'vue';
+import { watch, ref, onMounted } from 'vue';
 import { useSettingStore } from '@/stores/setting';
+import { useAuthStore } from '@/stores/auth';
 
+const authStore = useAuthStore()
 const route = useRoute()
 const page = ref('')
 
 const settingStore = useSettingStore()
 
-watch(() => route.meta.title,
-  (newName) => {
-    page.value = newName    
+watch(() => route.fullPath,
+  () => {
+    page.value = route.meta.title    
   }
 )
+onMounted( () => {
+  page.value = route.meta.title
+})
 </script>
 <template>
   <div class="uk-flex" uk-height-viewport>
@@ -35,12 +40,14 @@ watch(() => route.meta.title,
             <IconRefresh :size="20"/>
           </button>
           <div class="uk-align-baseline uk-text-capitalize" style="width: 200px;">{{page}}</div>
-          <button class="uk-button uk-button-default uk-width-auto">
+        </div>
+        <div class="uk-flex uk-flex-middle uk-text-capitalize">
+          <button class="uk-margin-small-right">
             <IconBell :size="20"/>
           </button>
-        </div>
-        <div class="uk-flex">
-          tttttttttttttttttttttt
+          <div class="uk-align-baseline">
+            Hello, {{ authStore.user.username }}
+          </div>
         </div>
       </div>
 <!-- MAIN CONTENT -->
@@ -147,6 +154,6 @@ button {
 }
 
 button:hover {
-  background-color: white;
+  background-color:#eee;
 }
 </style>

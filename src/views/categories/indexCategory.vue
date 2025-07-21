@@ -1,6 +1,6 @@
 <script setup>
 import { useCategoryStore } from '@/stores/category';
-import baseTable from '../components/baseTable.vue';
+import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
 import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-vue';
 
@@ -12,7 +12,9 @@ const columns = [
 ];
 
 onMounted( async ()=>{
-  await categoryStore.getCategories()
+	if (categoryStore.categoryItems.length < 1){
+    await categoryStore.getCategories()
+  }
 })
 </script>
 <template>

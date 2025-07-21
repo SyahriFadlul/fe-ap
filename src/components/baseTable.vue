@@ -4,17 +4,22 @@
       <thead>
         <tr>
           <th v-for="col in columns" :key="col.key">{{ col.label }}</th>
-          <th v-if="$slots.actions" style="width: 150px;">Aksi</th>
+          <th v-if="$slots.actions" :style="{ width:actionColWidth }">Aksi</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-if="data.length === 0">
+        <tr v-if="!data || data.length === 0">
           <td :colspan="columns.length + ($slots.actions ? 1 : 0)" class="empty-cell">
             Tidak ada data.
           </td>
         </tr>
-        <tr v-for="(item, index) in data" :key="item.id || index" class="row-tbl">
-          <td v-for="col in columns" :key="col.key" class="uk-text-capitalize">{{ item[col.key] }}</td>
+        <tr v-for="(item, index) in data" :key="item.id || index" class="row-tbl" @click="$emit('row-click', item)">
+          <td v-for="col in columns" :key="col.key" class="uk-text-capitalize">
+            <!-- {{ item[col.key] }} -->
+            <slot :name="col.key" :item="item">
+              {{ item[col.key] }}
+            </slot>
+          </td>
           <td v-if="$slots.actions" style="width: 150px;">
             <slot name="actions" :item="item" />
           </td>
@@ -35,6 +40,10 @@ defineProps({
     type: Array,
     required: true,
   },
+  actionColWidth: {
+    type: String,
+    default:'150px'
+  }
 });
 </script>
 
@@ -54,7 +63,7 @@ defineProps({
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 14px;
-  min-width: 700px; /* agar tidak menyusut */
+   /* agar tidak menyusut */
 }
 
 /* Header */

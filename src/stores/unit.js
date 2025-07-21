@@ -23,5 +23,8 @@ export const useUnitStore = defineStore('unit',{
             .then( res => console.log(res.data))
             .catch( err => console.log(err))            
         }
-    }
+    },
+    persist: {
+        storage: localStorage
+    },
 })

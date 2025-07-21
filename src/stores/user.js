@@ -17,42 +17,21 @@ export const useUserStore = defineStore('user',{
     },
     actions:{
         async getUsers(page = 1){
-            axios.get(`api/user?page=${page}`)
+            axios.get(`api/users?page=${page}`)
             .then( res => {
                 this.userList = res.data
-                this.pagination.currentPage = res.data.current_page
-                this.pagination.perPage = res.data.per_page
-                this.pagination.totalItems = res.data.total
-                this.pagination.totalPage = res.data.to
-                this.pagination.lastPage = res.data.last_page
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.to
+                this.pagination.lastPage = res.data.meta.last_page
                 console.log(this.userList)
             })
             .catch( err => console.log(err)
             )
         },
-
-        async downloadGoods(){
-            axios.get('api/goods/get-pdf', {
-                params: {
-                    stock_min: 20,
-                }
-            })
-            .then( res => {
-                console.log(res)                
-                // const url = window.URL.createObjectURL(new Blob([res.data]));
-                // const link = document.createElement('a');
-                // link.href = url;
-                // link.setAttribute('download', `goods_${id}.zip`);
-                // document.body.appendChild(link);
-                // link.click();
-            })
-            .catch( err => console.log(err))
-        },
-
-        async getIncomingGoodsData(){
-            axios.get('api/incoming-goods')
-            .then( res => console.log(res.data))
-            .catch( err => console.log(err))            
-        }
-    }
+    },
+    persist: {
+        storage: localStorage
+    },
 })
