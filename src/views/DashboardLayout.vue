@@ -6,12 +6,49 @@ import { useRoute } from 'vue-router';
 import { watch, ref, onMounted } from 'vue';
 import { useSettingStore } from '@/stores/setting';
 import { useAuthStore } from '@/stores/auth';
+import { useGoodsStore } from '@/stores/goods';
+import { useSupplierStore } from '@/stores/supplier';
+import { useCategoryStore } from '@/stores/category';
+import { useIncomingGoodsStore } from '@/stores/incomingGoods';
+import { useOutgoingGoodsStore } from '@/stores/outgoingGoods';
+import { useUserStore } from '@/stores/user';
 
 const authStore = useAuthStore()
+const goodsStore = useGoodsStore()
+const categoryStore = useCategoryStore()
+const supplierStore = useSupplierStore()
+const incomingGoodsStore = useIncomingGoodsStore()
+const outgoingGoodsStore = useOutgoingGoodsStore()
+const userStore = useUserStore()
 const route = useRoute()
 const page = ref('')
 
 const settingStore = useSettingStore()
+
+async function refresh(page){
+  if(page.toLowerCase() === 'dashboard'){
+    
+  }
+  if(page.toLowerCase() === 'inventori'){
+    await goodsStore.getGoods(1)
+  }
+  if(page.toLowerCase() === 'kategori'){
+    await categoryStore.getCategories()
+  }
+  if(page.toLowerCase() === 'supplier'){
+    await supplierStore.getSuppliers()
+  }
+  if(page.toLowerCase() === 'barang masuk'){
+    await incomingGoodsStore.getIncomingGoodsData()
+  }
+  if(page.toLowerCase() === 'barang keluar'){
+    await outgoingGoodsStore.getoutgoingGoodsData()
+  }
+  if(page.toLowerCase() === 'manajemen user'){
+    await userStore.getUsers()
+  }
+  
+}
 
 watch(() => route.fullPath,
   () => {
@@ -29,14 +66,14 @@ onMounted( () => {
       <Sidebar></Sidebar>
     </div>
 <!-- LAYOUT KANAN -->
-    <div :class="['main-wrapper uk-background-muted', { 'main-collapsed': !settingStore.isSidebarExpanded }]" style="height: 100vh;">
+    <div :class="['main-wrapper', { 'main-collapsed': !settingStore.isSidebarExpanded }]" style="height: 100vh;">
 <!-- HEADER -->
-      <div id="section-header" :class="['uk-flex uk-flex-between uk-background-muted', { 'header-collapsed': !settingStore.isSidebarExpanded }]">
+      <div id="section-header" :class="['uk-flex uk-flex-between', { 'header-collapsed': !settingStore.isSidebarExpanded }]">
         <div class="uk-flex uk-flex-middle">
           <button @click="settingStore.toggleSidebar">
             <IconMenu2 :size="20"/>
           </button>
-          <button style="margin: 0px 5px 0px 5px;">
+          <button style="margin: 0px 5px 0px 5px;" @click="refresh($route.meta.title)">
             <IconRefresh :size="20"/>
           </button>
           <div class="uk-align-baseline uk-text-capitalize" style="width: 200px;">{{page}}</div>
@@ -98,6 +135,7 @@ onMounted( () => {
   height: 100vh;
   transition: margin-left 0.3s ease, width 0.3s ease;
   min-width: 0;
+  background-color: #F0F9FF;
 }
 
 
@@ -119,6 +157,7 @@ onMounted( () => {
   display: flex;
   align-items: center;
   padding: 10px 15px;
+  background-color: #F0F9FF;
 }
 
 .header-collapsed {
@@ -139,7 +178,7 @@ onMounted( () => {
   margin-top: 50px; /* offset header */
   padding: 20px;
   min-width: 100% !important;
-  background: #f8f8f8;
+  background: #F0F9FF;
   border-radius: 15px;
 }
 

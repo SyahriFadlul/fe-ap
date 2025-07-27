@@ -2,7 +2,7 @@
 import { useOutgoingGoodsStore } from '@/stores/outgoingGoods';
 import { onMounted, ref } from 'vue';
 import baseTable from '@/components/baseTable.vue';
-import { IconFilter, IconSortAscending, IconPlus } from '@tabler/icons-vue';
+import { IconFilter, IconSortAscending, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue';
 
 const outgoingGoodsStore = useOutgoingGoodsStore()
 
@@ -30,7 +30,7 @@ onMounted( async () => {
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
 			</div>
 			<div class="uk-margin-auto-left">
-				<RouterLink :to="{name: 'createOutgoingGoods'}">
+				<RouterLink :to="{name: 'outgoingGoods.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Keluar</button>
 				</RouterLink>
 			</div>
@@ -38,8 +38,8 @@ onMounted( async () => {
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
 			<baseTable :columns="columns" :data="outgoingGoodsStore.outgoingGoodsItemList" class="table">
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="">Edit</button>
-					<button @click="remove(item)" class="">Hapus</button>
+					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
+					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>

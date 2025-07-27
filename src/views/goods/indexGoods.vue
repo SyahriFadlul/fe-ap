@@ -3,7 +3,7 @@ import { useGoodsStore } from '@/stores/goods'
 import { onMounted, ref, watch } from 'vue'
 import baseTable from '../../components/baseTable.vue'
 import Paginate from 'vuejs-paginate-next';
-import { IconDownload, IconBox, IconPlus } from '@tabler/icons-vue'
+import { IconDownload, IconBox, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart } from 'echarts/charts'
@@ -11,10 +11,15 @@ import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/compo
 import VChart from 'vue-echarts' 
 import { CountTo } from 'vue3-count-to';
 import debounce from 'lodash.debounce';
+import { useRoute, useRouter } from 'vue-router';
+import { useChartStore } from '@/stores/chart';
+import Swal from 'sweetalert2';
+
 
 const goodsStore = useGoodsStore()
-
-const page = 10
+const chartStore = useChartStore()
+const route = useRoute()
+const router = useRouter()
 
 use([
   CanvasRenderer,
@@ -29,16 +34,17 @@ const option = ref({
     trigger: 'item'
   },
   legend: {
-    // top: '5%',
-    // left: 'center',
+    center: '5%',
+    left: 'right',
     show: false,
+    orient: 'vertical'
   },
   series: [
     {
-      name: 'Access From',
+      name: 'Distribusi Kategori',
       bottom: '80%',
       type: 'pie',
-      height:'50%',
+      height:'100%',
       radius: ['40%', '70%'],
       avoidLabelOverlap: false,
       itemStyle: {
@@ -60,21 +66,42 @@ const option = ref({
       labelLine: {
         show: false
       },
-      data: [
-        { value: 1048, name: 'Search Engine' },
-        { value: 735, name: 'Direct' },
-        { value: 580, name: 'Email' },
-        { value: 484, name: 'Union Ads' },
-        { value: 300, name: 'Video Ads' }
-      ]
+      data: chartStore.categoryDistributionOption
     }
   ]
 });
 
-// function onClickHandler(page) {
-//     console.log(page)
-// }
-
+function deleteGoods(item){
+  Swal.fire({
+    title: 'Yakin ingin menghapus?',
+    text: `Barang: ${item.name}`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await goodsStore.deleteGoods(item.id)
+        Swal.fire({
+          title: 'Dihapus!',
+          text: 'Barang berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })        
+      } catch (error) {
+        console.log(error);
+        
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus.',
+          icon: 'error',
+        })
+      }
+    }
+  })
+}
 const columns = [
   { key: 'name', label: 'Nama Barang' },
   { key: 'category', label: 'Kategori' },
@@ -86,30 +113,54 @@ const columns = [
 
 // changePage(page)
 async function clickCallback(page){
-  await goodsStore.getGoods(page)  
+  router.push({
+    name: 'goods.index',
+    query: {...route.query, page}
+  })  
 }
 
-const currentPage = ref(1);
+watch(()=> goodsStore.categoryDistribution,
+    (newVal)=> {
+        chartStore.categoryDistributionOption = newVal.map(item =>({
+        name : item.category,
+        value : item.total
+        }))
+    }
+)
+
+watch(()=> route.query.page,
+  async (page)=>{
+    goodsStore.pagination.currentPage = page    
+    await goodsStore.getGoods(page)
+  }
+)
 
 onMounted( async ()=>{
   if(goodsStore.goodsItems.length < 1){
-    await goodsStore.getGoods()
+    await goodsStore.getGoods(1)
   }
-    
+  chartStore.setCategoryDistributionOption()
+//     Swal.fire({
+//   title: 'Error!',
+//   text: 'Do you want to continue',
+//   icon: 'error',
+//   confirmButtonText: 'Cool'
+// })
 })
 </script>
 <template>
-  <div class="main-goods uk-background-muted">
+  <div class="main-goods">
     <div class="uk-flex">
       <div class="info-card uk-margin-medium-right uk-background-default">
         <div class="info-ttl">Total jenis barang</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="5000" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="goodsStore.pagination.totalItems" :duration="1000" separator="" /></div>
           <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
       </div>                
-      <div class="info-card">
-        <v-chart class="chart" :option="option" style="width: 100px; height: 50px !important;" />
+      <div class="info-card chart-card">
+        Distribusi Kategori
+        <v-chart class="chart" :option="option" autoresize="true"/>
       </div>
     </div>
     <hr class="uk-divider uk-margin-small">
@@ -118,7 +169,7 @@ onMounted( async ()=>{
         <input type="text" class="search uk-text-italic" placeholder="Cari barang..." v-model="goodsStore.searchQuery">
       </div>
       <div class="uk-margin-auto-left">
-        <RouterLink :to="{name: 'createGoods'}">
+        <RouterLink :to="{name: 'goods.create'}">
           <button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang</button>
         </RouterLink>
       </div>
@@ -127,14 +178,14 @@ onMounted( async ()=>{
     <div class="uk-overflow-auto uk-flex">      
       <baseTable :columns="columns" :data="goodsStore.goodsItems" class="table">
         <template #actions="{ item }">
-          <button @click="edit(item)" class="">Edit</button>
-          <button @click="remove(item)" class="">Hapus</button>
+          <button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
+					<button @click="deleteGoods(item)" class="btn-del"><IconTrash :size="18"/></button>
         </template>
       </baseTable>
     </div>
 
     <paginate
-      v-model="page"
+      v-model="goodsStore.pagination.currentPage"
       :page-count="goodsStore.pagination.totalPage"
       :page-range="3"
       :margin-pages="3"
@@ -149,6 +200,9 @@ onMounted( async ()=>{
 
 
 <style scoped>
+.main-goods{
+  background-color: #F0F9FF;
+}
 .table {
   width: 100%;
   font-size: 12px;
@@ -170,6 +224,20 @@ onMounted( async ()=>{
   width: 254px;
   height: 120px;
   justify-content: center;
+}
+
+.chart-card {
+  padding: 10px;
+  width: 254px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart {
+  width: 100%;
+  height: 50%; /* atau sesuaikan tinggi ideal */
 }
 
 .info-num {
@@ -202,6 +270,11 @@ onMounted( async ()=>{
   border-radius: 5px;
   margin-bottom: 10px;
 }
+
+button {
+  border: none;
+}
+
 
 /* .page-item {
 } */

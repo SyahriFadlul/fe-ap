@@ -12,11 +12,14 @@ export const useGoodsStore = defineStore('goods',{
             totalPage: 0,
             lastPage: 1,
         },
+        total_stock: 0,
         search: '',
         offset: 0,
         limit: 10,
         resGoodsQuery: [],
-        searchLoading:false,
+        searchLoading:  false,
+        errors: [],
+        categoryDistribution: [],
     }),
     getters:{
         goodsItems: (state) => state.goodsList,
@@ -37,23 +40,73 @@ export const useGoodsStore = defineStore('goods',{
         },
         result: (state) => state.resGoodsQuery,
         sloading: (state) => state.searchLoading,
+        error: (state) => state.errors,
+        totalStock: (state) => state.total_stock,
     },
     actions:{
         async getGoods(page = 1){
+            this.categoryDistribution = []
+            this.goodsList = []
+            
             axios.get(`api/goods?page=${page}`)
             .then( res => {
                 this.goodsList = res.data.data
-                this.pagination.currentPage = res.data.meta.current_page
-                this.pagination.perPage = res.data.meta.per_page
-                this.pagination.totalItems = res.data.meta.total
-                this.pagination.totalPage = res.data.meta.to
-                this.pagination.lastPage = res.data.meta.last_page
+                this.pagination.currentPage = res.data.meta.pagination.current_page
+                this.pagination.perPage = res.data.meta.pagination.per_page
+                this.pagination.totalItems = res.data.meta.pagination.total
+                this.pagination.totalPage = res.data.meta.pagination.last_page
+                this.pagination.lastPage = res.data.meta.pagination.last_page
+                this.total_stock = res.data.meta.total_stock
+                this.categoryDistribution = res.data.meta.category_distribution
                 console.log(res.data)
             })
             .catch( err => console.log(err)
             )
         },
-
+        async createGoods(data){
+            this.errors = []
+            await axios.post('api/goods', {
+                name: data.name,
+                category_id: data.category_id,
+                base_unit_id: data.base_unit_id,
+                medium_unit_id: data.medium_unit_id,
+                large_unit_id: data.large_unit_id,
+                conversion_medium_to_base: data.conversion_medium_to_base,
+                conversion_large_to_medium: data.conversion_large_to_medium,
+                shelf_location: data.shelf_location,
+            })
+            .then( async () =>{
+                this.UIkit.notification({
+                    message: 'Barang berhasil ditambahkan!',
+                    status: 'success',
+                    pos: 'top-center',
+                    timeout: 3000
+                }) 
+                this.router.push('/goods')
+                await this.getGoods()
+            })
+            .catch( err =>{ 
+                if(err.status === 422){
+                    this.errors = err.response.data.errors
+                    console.log(this.errors.name[0]);       
+                }
+                console.log(err.message);
+                
+            })
+        },
+        async deleteGoods(id){
+            await axios.delete(`api/goods/${id}`)
+            .then( res => {
+                const page = 1
+                this.router.push({
+                    name: 'goods.index',
+                    query: {...route.query, page}
+                })
+                
+                return true
+            })
+            .catch( err => false)
+        },
         async downloadGoods(){
             axios.get('api/goods/get-pdf', {
                 params: {

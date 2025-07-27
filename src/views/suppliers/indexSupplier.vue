@@ -1,9 +1,11 @@
 <script setup>
 import { useSupplierStore } from '@/stores/supplier';
 import baseTable from '../../components/baseTable.vue';
-import { onMounted } from 'vue';
-import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-vue';
+import { onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { IconEdit, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
+import Swal from 'sweetalert2';
 
 const supplierStore = useSupplierStore()
 
@@ -12,6 +14,38 @@ const columns = [
   { key: 'contact', label: 'Kontak' },
   { key: 'note', label: 'Catatan' },
 ];
+
+function deleteSupplier(item){
+  Swal.fire({
+    title: 'Yakin ingin menghapus?',
+    text: `Supplier: ${item.name}`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await supplierStore.deleteSupplier(item.id)
+        Swal.fire({
+          title: 'Dihapus!',
+          text: 'Supplier berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })        
+      } catch (error) {
+        console.log(error);
+        
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus.',
+          icon: 'error',
+        })
+      }
+    }
+  })
+}
 
 function clickCallback(){
 
@@ -33,7 +67,7 @@ onMounted( async ()=>{
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
 			</div>
 			<div class="uk-margin-auto-left">
-				<RouterLink :to="{name: 'createSupplier'}">
+				<RouterLink :to="{name: 'supplier.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Supplier</button>
 				</RouterLink>
 			</div>
@@ -42,7 +76,7 @@ onMounted( async ()=>{
 			<baseTable :columns="columns" :data="supplierStore.supplierList" class="table">
 				<template #actions="{ item }">
 					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
+					<button @click="deleteSupplier(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>

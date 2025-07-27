@@ -6,8 +6,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'dashboardl',
+      path: '/',      
       component: () => import('@/views/DashboardLayout.vue'),
       meta:{
           requiresAuth: true,
@@ -16,6 +15,7 @@ const router = createRouter({
       children:[
         {
           path: '',
+          name: 'dashboardl',
           redirect: { name: 'dashboardh' },
           meta: {
             title: 'dashboard'
@@ -32,7 +32,7 @@ const router = createRouter({
         },
         {
           path: '/goods',
-          name: 'indexGoods',
+          name: 'goods.index',
           // component: () => import('@/views/goods/indexGoods.vue'),
           component: indexGoods,
           meta:{
@@ -41,7 +41,7 @@ const router = createRouter({
         },
         {
           path: '/goods/create',
-          name: 'createGoods',
+          name: 'goods.create',
           component: () => import('@/views/goods/createGoods.vue'),
           meta:{
             title: 'inventori'
@@ -49,7 +49,7 @@ const router = createRouter({
         },
         {
           path: '/incoming-goods',
-          name: 'indexIncomingGoods',
+          name: 'incomingGoods.index',
           component: () => import('@/views/goods/incomingGoods/indexIncomingGoods.vue'),
           meta:{
             title: 'barang masuk'
@@ -57,7 +57,7 @@ const router = createRouter({
         },
         {
           path: '/incoming-goods/create',
-          name: 'createIncomingGoods',
+          name: 'incomingGoods.create',
           component: () => import('@/views/goods/incomingGoods/createIncomingGoods.vue'),
           meta:{
             title: 'barang masuk'
@@ -65,7 +65,7 @@ const router = createRouter({
         },
         {
           path: '/outgoing-goods',
-          name: 'indexOutgoingGoods',
+          name: 'outgoingGoods.index',
           component: () => import('@/views/goods/outgoingGoods/indexOutgoingGoods.vue'),
           meta:{
             title: 'barang keluar'
@@ -73,7 +73,7 @@ const router = createRouter({
         },
         {
           path: '/outgoing-goods/create',
-          name: 'createOutgoingGoods',
+          name: 'outgoingGoods.create',
           component: () => import('@/views/goods/outgoingGoods/createOutgoingGoods.vue'),
           meta:{
             title: 'barang keluar'
@@ -81,7 +81,7 @@ const router = createRouter({
         },
         {
           path: '/categories',
-          name: 'indexCategory',
+          name: 'category.index',
           component: () => import('@/views/categories/indexCategory.vue'),
           meta:{
             title: 'kategori'
@@ -89,7 +89,7 @@ const router = createRouter({
         },
         {
           path: '/categories/create',
-          name: 'createCategory',
+          name: 'category.create',
           component: () => import('@/views/categories/createCategory.vue'),
           meta:{
             title: 'kategori'
@@ -97,7 +97,7 @@ const router = createRouter({
         },
         {
           path: '/suppliers',
-          name: 'indexSupplier',
+          name: 'supplier.index',
           component: () => import('@/views/suppliers/indexSupplier.vue'),
           meta:{
             title: 'Supplier'
@@ -105,7 +105,7 @@ const router = createRouter({
         },
         {
           path: '/suppliers/create',
-          name: 'createSupplier',
+          name: 'supplier.create',
           component: () => import('@/views/suppliers/createSupplier.vue'),
           meta:{
             title: 'Supplier'
@@ -113,7 +113,7 @@ const router = createRouter({
         },
         {
           path: '/users',
-          name: 'indexUser',
+          name: 'user.index',
           component: () => import('@/views/users/indexUser.vue'),
           meta:{
             title: 'manajemen user'
@@ -121,7 +121,7 @@ const router = createRouter({
         },
         {
           path: '/users/create',
-          name: 'createUser',
+          name: 'user.create',
           component: () => import('@/views/users/createUser.vue'),
           meta:{
             title: 'manajemen user'

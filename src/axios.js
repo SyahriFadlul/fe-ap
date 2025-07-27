@@ -42,6 +42,7 @@ axios.interceptors.request.use(function (config) {
     
     return config
     }, function (error) {
+        nProgress.done() 
         return Promise.reject(error)
     }    
 )
@@ -49,4 +50,7 @@ axios.interceptors.request.use(function (config) {
 axios.interceptors.response.use(response => {
     nProgress.done() 
     return response
+}, error => {
+    nProgress.done() // ⬅ WAJIB untuk stop animasi jika response-nya error (422, 500, dsb)
+    return Promise.reject(error)
 })

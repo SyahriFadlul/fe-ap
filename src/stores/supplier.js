@@ -11,9 +11,11 @@ export const useSupplierStore = defineStore('supplier',{
             totalPage: 0,
             lastPage: 1,
         },
+        errors:[],
     }),
     getters:{
         supplierItems: (state) => state.supplierList,
+        error: (state) => state.errors,
     },
     actions:{
         async getSuppliers(page = 1){
@@ -23,14 +25,49 @@ export const useSupplierStore = defineStore('supplier',{
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
                 this.pagination.totalItems = res.data.meta.total
-                this.pagination.totalPage = res.data.meta.to
+                this.pagination.totalPage = res.data.meta.last_page
                 this.pagination.lastPage = res.data.meta.last_page
                 console.log(this.supplierList)
             })
             .catch( err => console.log(err)
             )
         },
-
+        async createSupplier(data){
+            this.errors = []
+            await axios.post('api/supplier', {
+                name: data.name,
+                contact: data.contact,
+                note: data.note,
+            })
+            .then( async () =>{
+                this.UIkit.notification({
+                    message: 'Supplier berhasil ditambahkan!',
+                    status: 'success',
+                    pos: 'top-center',
+                    timeout: 3000
+                }) 
+                await this.getSuppliers()
+                this.router.push({name:'supplier.index'})
+            })
+            .catch( err =>{ 
+                if(err.status === 422){
+                    this.errors = err.response.data.errors
+                    console.log(this.errors.name[0]);       
+                }
+                console.log(err.message);
+                
+            })
+        },
+        async deleteSupplier(id){
+            await axios.delete(`api/supplier/${id}`)
+            .then(async res => {
+                await this.getSuppliers()
+                this.router.push({name:'supplier.index'})
+                
+                return true
+            })
+            .catch( err => false)
+        },
         async downloadGoods(){
             axios.get('api/goods/get-pdf', {
                 params: {

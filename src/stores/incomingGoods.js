@@ -19,17 +19,25 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             totalPage: 0,
             lastPage: 1,
         },
-        selectedIncomingGoods:{
-            id: '',
+        selectedIncomingGoodsItems: null,//vue select
+        selectedIncomingGoods:{ 
+            id: null,
             name: '',
-            supplier_id: '',
             batch_number: '',
-            qty: '',
-            unit_id: '',
-            price_per_line: '',
-            expiry_date: '',
+            qty: 1,
+            conversion_qty: 1,
+            unit_id: null,
+            price_per_line: null,
+            expiry_date: null,
         },
         incomingGoodsCart:[],
+        incomingGoodsForm: {
+            invoice: '',
+            supplier_id: null,
+            received_date: '',
+            items: [], // atau incomingGoodsCart
+        },
+        editingTempId: null,
     }),
     getters:{
         incomingGoodsItemList: (state) => state.incomingGoodsList,
@@ -37,9 +45,9 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         paginatedCart(state){
             const start = (state.cartPagination.currentPage - 1) * state.cartPagination.perPage;
             const end = start + state.cartPagination.perPage;
-            return state.incomingGoodsCart.slice(start, end);
+            return state.incomingGoodsForm.items.slice(start, end);
         },
-        cartTotalPage: (state) => Math.ceil(state.incomingGoodsCart.length / state.cartPagination.perPage),
+        cartTotalPage: (state) => Math.ceil(state.incomingGoodsForm.items.length / state.cartPagination.perPage),
         selectedCartItemId: (state) => state.selectedIncomingGoods.id,
         selectedCartItemName: (state) => state.selectedIncomingGoods.name,
         selectedCartItemSupplier: (state) => state.selectedIncomingGoods.supplier_id,
@@ -55,21 +63,53 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                     item[key] === state.selectedIncomingGoods[key]
                 )
             )
-        }
+        },
+        totalAmount(state){
+            // console.log(state.incomingGoodsForm.items.reduce((sum, item) => {
+            //     return sum + (item.qty * item.price_per_line)
+            // },0));
+            console.log(state.incomingGoodsForm.items);
+            
+            return state.incomingGoodsForm.items.reduce((sum, item) => {
+                return sum + (item.qty * item.price_per_line)}, 0)
+        },
+        isEditing: (state) => state.editingTempId !== null,
     },
     actions:{        
-        async getIncomingGoodsData(){
-            axios.get('api/incoming-goods')
+        async getIncomingGoodsData(page = 1){
+            axios.get(`api/incoming-goods?page=${page}`)
             .then( (res) => {       
                 console.log(res.data.data)                
                 this.incomingGoodsList = res.data.data
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
                 this.pagination.totalItems = res.data.meta.total
-                this.pagination.totalPage = res.data.meta.to
+                this.pagination.totalPage = res.data.meta.last_page
                 this.pagination.lastPage = res.data.meta.last_page
             })
             .catch( err => console.log(err))            
+        },
+        async createIncomingGoods(){
+            const data = this.incomingGoodsForm
+            console.log(this.totalAmount);
+            
+            await axios.post('api/incoming-goods', {
+                supplier_id: data.supplier_id,
+                invoice: data.invoice,
+                received_date: data.received_date,
+                amount: this.totalAmount,
+                items: data.items,
+            }).then(res => console.log(res.statusText)
+            )
+            .catch(err => {
+                if(err.status === 500){
+                    throw 'Terjadi kesalahan saat menyimpan transaksi. Coba lagi nanti.'
+                }                
+                throw err
+            })
+        },
+        async editCartItem(data){
+            this.selectedIncomingGoods = data
         },
         async downloadGoods(){
             axios.get('api/goods/get-pdf', {
@@ -91,35 +131,76 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         showDetails(item){
             this.incomingGoodsItemList = item
         },
-        btnAddItemToCart(data,details){
-            const goodsStore = useGoodsStore()
-            goodsStore.resGoodsQuery = []
+        addItemToCart() {
+            console.log(this.selectedIncomingGoods);
+            console.log(this.selectedIncomingGoodsItems);
+            const data = {
+                ...this.selectedIncomingGoods,
+                id: this.selectedIncomingGoodsItems.id,
+                name: this.selectedIncomingGoodsItems.name,
+            }               
             console.log(data);
-            console.log(details);
-            const exists = this.incomingGoodsCart.some( item =>
-                item.id === this.selectedIncomingGoods.id &&
-                item.supplier_id === this.selectedIncomingGoods.supplier_id ||
-                item.batch_number === this.selectedIncomingGoods.batch_number 
-            )
-            if(!exists){
-                this.incomingGoodsCart.push(this.selectedIncomingGoods)
-                this.selectedIncomingGoods = []
+                     
+            this.incomingGoodsForm.items.push({
+                ...data,
+                tempId: `${Date.now()} - ${Math.random().toString(36).substring(2,5)}`
+            })
+            
+            this.clearCurrentItem()
+        },
+        editItemFromCart(item) { //item = incominggoodsform
+            console.log(item);
+            const{id, name, tempId,...rest} = item
+            this.selectedIncomingGoodsItems = {id, name}
+            this.selectedIncomingGoods = { ...rest} // isi form
+            this.editingTempId = item.tempId
+        },
+        saveEditedItemToCart() {
+            const index = this.incomingGoodsForm.items.findIndex(item => item.tempId === this.editingTempId)
+            if (index !== -1) {
+                this.incomingGoodsForm.items.splice(index, 1, {
+                ...this.selectedIncomingGoods,
+                id: this.selectedIncomingGoodsItems.id,
+                name: this.selectedIncomingGoodsItems.name,
+                tempId: this.editingTempId,
+                })
             }
-            // const exists = this.incomingGoodsCart.some( item =>
-            //     item.id === data.id &&
-            //     item.supplier_id === details.supplier_id &&
-            //     item.batch_number === details.batch_number 
-            // )
-            // if(!exists){
-            //     this.incomingGoodsCart.push({
-            //         ...data,
-            //         ...details
-            //     })
-            // }
+            this.editingTempId = null
+            this.clearCurrentItem()
+        },
+        removeItemFromCart(data) {            
+            console.log(data);
+                        
+            if (this.editingTempId === data.tempId) {
+                this.clearCurrentItem()
+                this.editingTempId = null
+            }   
+            this.incomingGoodsForm.items = this.incomingGoodsForm.items.filter(item => item.tempId !== data.tempId)
         },
         setCartPage(page) {
             this.cartPagination.currentPage = page
         },
+        clearCurrentItem(){
+            this.selectedIncomingGoods = {
+                id: null,
+                name: '',
+                batch_number: '',
+                qty: 1,
+                conversion_qty: 1,
+                unit_id: null,
+                price_per_line: null,
+                expiry_date: null,
+            }
+            this.selectedIncomingGoodsItems = null
+        },
+        clearCart(){ //hapus data di table
+            this.incomingGoodsForm = {
+                invoice: '',
+                supplier_id: null,
+                received_date: '',
+                items: [],
+            }
+        }
     },
     persist: {
         storage: localStorage

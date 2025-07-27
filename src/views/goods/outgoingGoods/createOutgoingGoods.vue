@@ -9,6 +9,10 @@ const goodsStore = useGoodsStore()
 const categoryStore = useCategoryStore()
 const unitStore = useUnitStore()
 
+function cancel(){
+  router.go(-1)
+}
+
 onMounted( async ()=>{
   await categoryStore.getCategories()
   await unitStore.getUnits()

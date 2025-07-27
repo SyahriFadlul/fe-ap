@@ -2,14 +2,65 @@
 import { useCategoryStore } from '@/stores/category';
 import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
-import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-vue';
+import { IconEdit, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import Swal from 'sweetalert2';
+import { watch } from 'vue';
+import { useRoute } from 'vue-router';
+import Paginate from 'vuejs-paginate-next';
 
 const categoryStore = useCategoryStore()
+const route = useRoute()
+
+function deleteCategory(item){
+  Swal.fire({
+    title: 'Yakin ingin menghapus?',
+    text: `Kategori: ${item.name}`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await categoryStore.deleteCategory(item.id)
+        Swal.fire({
+          title: 'Dihapus!',
+          text: 'Kategori berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })        
+      } catch (error) {
+        console.log(error);
+        
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus.',
+          icon: 'error',
+        })
+      }
+    }
+  })
+}
 
 const columns = [
   { key: 'name', label: 'Nama Kategori' },
   { key: 'note', label: 'Catatan' },
 ];
+
+async function clickCallback(page){
+  router.push({
+    name: 'category.index',
+    query: {...route.query, page}
+  })  
+}
+
+watch(()=> route.query.page,
+  async (page)=>{
+    categoryStore.pagination.currentPage = page    
+    await categoryStore.getGoods(page)
+  }
+)
 
 onMounted( async ()=>{
 	if (categoryStore.categoryItems.length < 1){
@@ -27,7 +78,7 @@ onMounted( async ()=>{
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
 			</div>
 			<div class="uk-margin-auto-left">
-				<RouterLink :to="{name: 'createCategory'}">
+				<RouterLink :to="{name: 'category.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Kategori</button>
 				</RouterLink>
 			</div>
@@ -36,10 +87,21 @@ onMounted( async ()=>{
 			<baseTable :columns="columns" :data="categoryStore.categoryItems" class="table">
 				<template #actions="{ item }">
 					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
+					<button @click="deleteCategory(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>
+		<paginate
+		v-model="categoryStore.pagination.currentPage"
+		:page-count="categoryStore.pagination.totalPage"
+		:page-range="3"
+		:margin-pages="3"
+		:click-handler="clickCallback"
+		:prev-text="'Sebelumnya'"
+		:next-text="'Selanjutnya'"
+		:container-class="'pagination'"
+		:page-class="'page-item'"
+		/>
 	</div>
 </template>
 <style  scoped>

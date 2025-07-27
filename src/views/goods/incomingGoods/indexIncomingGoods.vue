@@ -1,11 +1,14 @@
 <script setup>
 import { useIncomingGoodsStore } from '@/stores/incomingGoods';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import baseTable from '@/components/baseTable.vue';
-import { IconFilter, IconSortAscending, IconPlus } from '@tabler/icons-vue';
+import { IconFilter, IconSortAscending, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
+import { useRoute, useRouter } from 'vue-router';
 
 const incomingGoodsStore = useIncomingGoodsStore()
+const route = useRoute()
+const router = useRouter()
 
 const columns = [
   { key: 'received_date', label: 'Tanggal Penerimaan' },
@@ -21,14 +24,25 @@ const rupiahNum = function (num) {
 };
 
 async function clickCallback(page){
-  await incomingGoodsStore.getIncomingGoodsData(page)  
+  router.push({
+    name: 'incomingGoods.index',
+    query: {...route.query, page}
+  })  
 }
+
+watch(()=> route.query.page,
+  async (page)=>{
+    incomingGoodsStore.pagination.currentPage = page    
+    await incomingGoodsStore.getIncomingGoodsData(page)
+  }
+)
 
 onMounted( async () => {
   if (incomingGoodsStore.incomingGoodsItemList.length < 1){
     await incomingGoodsStore.getIncomingGoodsData()
   }
 	console.log(incomingGoodsStore.incomingGoodsItemList);
+	console.log(typeof incomingGoodsStore.pagination.currentPage);
 	
 }) 
 </script>
@@ -42,7 +56,7 @@ onMounted( async () => {
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
 			</div>
 			<div class="uk-margin-auto-left">
-				<RouterLink :to="{name: 'createIncomingGoods'}">
+				<RouterLink :to="{name: 'incomingGoods.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Masuk</button>
 				</RouterLink>
 			</div>
@@ -53,22 +67,22 @@ onMounted( async () => {
 					<span>Rp.{{ rupiahNum(item.amount) }}</span>
 				</template>
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="">Edit</button>
-					<button @click="remove(item)" class="">Hapus</button>
+					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
+					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div> 
     <paginate
-      :page-count="incomingGoodsStore.pagination.totalPage"
-      :page-range="3"
-      :margin-pages="3"
-      :click-handler="clickCallback"
-      :prev-text="'Sebelumnya'"
-      :next-text="'Selanjutnya'"
-      :container-class="'pagination'"
-      :page-class="'page-item'"
-      class="uk-margin-auto-right"
-      />
+	v-model="incomingGoodsStore.pagination.currentPage"
+    :page-count="incomingGoodsStore.pagination.totalPage"
+	:page-range="3"
+	:margin-pages="3"
+	:click-handler="clickCallback"
+	:prev-text="'Sebelumnya'"
+	:next-text="'Selanjutnya'"
+	:container-class="'pagination'"
+	:page-class="'page-item'"
+	/>
 	</div>
 </template>
 <style  scoped>
@@ -99,11 +113,4 @@ onMounted( async () => {
   border: 1px solid rgb(241, 226, 226);
   border-radius: 10px;
 }
-
-.pagination {
-  display: flex;
-  justify-self: end;
-  margin-top: 5px;
-}
-
 </style>

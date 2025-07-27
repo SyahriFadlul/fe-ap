@@ -11,9 +11,11 @@ export const useCategoryStore = defineStore('category',{
             totalPage: 0,
             lastPage: 1,
         },
+        errors:[]
     }),
     getters:{
         categoryItems: (state) => state.categoryList,
+        error: (state) => state.errors
     },
     actions:{
         async getCategories(page = 1){
@@ -23,14 +25,47 @@ export const useCategoryStore = defineStore('category',{
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
                 this.pagination.totalItems = res.data.meta.total
-                this.pagination.totalPage = res.data.meta.to
+                this.pagination.totalPage = res.data.meta.last_page
                 this.pagination.lastPage = res.data.meta.last_page
-                console.log(this.categoryList)
             })
             .catch( err => console.log(err)
             )
         },
-
+        async createCategory(data){
+            this.errors = []
+            await axios.post('api/category', {
+                name: data.name,
+                note: data.note,
+            })
+            .then( async () =>{
+                this.UIkit.notification({
+                    message: 'Kategori berhasil ditambahkan!',
+                    status: 'success',
+                    pos: 'top-center',
+                    timeout: 3000
+                }) 
+                await this.getCategories()
+                this.router.push('/categories')
+            })
+            .catch( err =>{ 
+                if(err.status === 422){
+                    this.errors = err.response.data.errors
+                    console.log(this.errors.name[0]);       
+                }
+                console.log(err.message);
+                
+            })
+        },
+        async deleteCategory(id){
+            await axios.delete(`api/category/${id}`)
+            .then(async res => {
+                await this.getCategories()
+                this.router.push('/categories')
+                
+                return true
+            })
+            .catch( err => false)
+        },
         async downloadGoods(){
             axios.get('api/goods/get-pdf', {
                 params: {

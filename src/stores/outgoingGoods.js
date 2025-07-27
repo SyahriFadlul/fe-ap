@@ -24,7 +24,7 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
                 this.pagination.totalItems = res.data.meta.total
-                this.pagination.totalPage = res.data.meta.to
+                this.pagination.totalPage = res.data.meta.last_page
                 this.pagination.lastPage = res.data.meta.last_page
             })
             .catch( err => console.log(err))            

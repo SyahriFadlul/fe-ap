@@ -13,15 +13,29 @@
             Tidak ada data.
           </td>
         </tr>
-        <tr v-for="(item, index) in data" :key="item.id || index" class="row-tbl" @click="$emit('row-click', item)">
+        <!-- <tr v-for="(item, index) in data" :key="item.id || index" class="row-tbl" @click="$emit('row-click', item)">
           <td v-for="col in columns" :key="col.key" class="uk-text-capitalize">
-            <!-- {{ item[col.key] }} -->
             <slot :name="col.key" :item="item">
               {{ item[col.key] }}
             </slot>
           </td>
           <td v-if="$slots.actions" style="width: 150px;">
             <slot name="actions" :item="item" />
+          </td>
+        </tr> -->
+        <tr v-for="(item, index) in paddedData" :key="item.id || 'empty-' + index" class="row-tbl" @click="!item.__empty && $emit('row-click', item)">
+          <td v-for="col in columns" :key="col.key" class="uk-text-capitalize">
+            <template v-if="item.__empty">
+              &nbsp;
+            </template>
+            <slot v-else :name="col.key" :item="item">
+              {{ item[col.key] }}
+            </slot>
+          </td>
+          <td v-if="$slots.actions" style="width: 150px;">
+            <template v-if="!item.__empty">
+              <slot name="actions" :item="item" />
+            </template>
           </td>
         </tr>
       </tbody>
@@ -30,7 +44,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   columns: {
     type: Array,
     required: true,
@@ -43,8 +59,22 @@ defineProps({
   actionColWidth: {
     type: String,
     default:'150px'
+  },
+  minRows: {
+    type: Number,
+    defauit: 0,
   }
 });
+const paddedData = computed(() => {
+  const actualData = props.data || []
+  const result = [...actualData]
+
+  while (result.length < props.minRows) {
+    result.push({ __empty: true })
+  }
+
+  return result
+})
 </script>
 
 <style scoped>
@@ -72,8 +102,8 @@ defineProps({
   padding: 12px 12px;
   text-align: left;
   font-weight: 600;
-  background-color: #f0f0ff !important;
-  color: black;
+  background-color: #888891 !important;
+  color: white;
   border-bottom: 1px solid #ddd;
   white-space: nowrap;
   box-sizing: border-box;

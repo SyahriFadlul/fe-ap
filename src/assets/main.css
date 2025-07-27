@@ -17,6 +17,8 @@
   font-style: italic;
 }
 
+
+
 #app {
   font-family: 'Roboto';
   height: 100%;
@@ -33,4 +35,43 @@
 
 .hide-header {
   display: none !important;
+}
+
+.pagination {
+  display: flex;
+  justify-self: end;
+  margin-top: 5px;
+}
+
+.btn-edit {
+  background-color: #00A9FF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+.btn-del {
+  background-color: #F0506E ;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+input, textarea, select {
+  border: 1px solid #e5e5e5;
+}
+
+input:focus, textarea:focus, select:focus {
+  border: 1px solid #1e87f0;
+  outline: none;             /* Hilangkan garis putus-putus dari browser */
+  
+  transition: .2s ease-in-out;
+}
+
+/* .uk-notification {
+  background-color: red !important;
+} */
+.uk-notification-message {
+  background-color: #f0f0ff  !important;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px !important;
 }
