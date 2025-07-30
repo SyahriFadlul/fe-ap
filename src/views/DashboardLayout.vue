@@ -30,19 +30,20 @@ async function refresh(page){
     
   }
   if(page.toLowerCase() === 'inventori'){
-    await goodsStore.getGoods(1)
+    await goodsStore.fetchGoods(1)
+    await goodsStore.fetchGoodsBatches()
   }
   if(page.toLowerCase() === 'kategori'){
-    await categoryStore.getCategories()
+    await categoryStore.fetchCategories()
   }
   if(page.toLowerCase() === 'supplier'){
-    await supplierStore.getSuppliers()
+    await supplierStore.fetchSuppliers()
   }
   if(page.toLowerCase() === 'barang masuk'){
     await incomingGoodsStore.getIncomingGoodsData()
   }
   if(page.toLowerCase() === 'barang keluar'){
-    await outgoingGoodsStore.getoutgoingGoodsData()
+    await outgoingGoodsStore.fetchOutgoingGoods()
   }
   if(page.toLowerCase() === 'manajemen user'){
     await userStore.getUsers()

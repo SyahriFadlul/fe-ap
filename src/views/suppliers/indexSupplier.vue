@@ -3,7 +3,7 @@ import { useSupplierStore } from '@/stores/supplier';
 import baseTable from '../../components/baseTable.vue';
 import { onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { IconEdit, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
 import Swal from 'sweetalert2';
 
@@ -14,6 +14,13 @@ const columns = [
   { key: 'contact', label: 'Kontak' },
   { key: 'note', label: 'Catatan' },
 ];
+
+async function clickCallback(page){
+  router.push({
+    name: 'supplier.index',
+    query: {...route.query, page}
+  })  
+}
 
 function deleteSupplier(item){
   Swal.fire({
@@ -39,7 +46,7 @@ function deleteSupplier(item){
         
         Swal.fire({
           title: 'Gagal!',
-          text: 'Terjadi kesalahan saat menghapus.',
+          text: error.response.data.message,
           icon: 'error',
         })
       }
@@ -47,13 +54,10 @@ function deleteSupplier(item){
   })
 }
 
-function clickCallback(){
-
-}
-
 onMounted( async ()=>{
+  supplierStore.editing = false
   if (supplierStore.supplierItems.length < 1){
-    await supplierStore.getSuppliers()
+    await supplierStore.fetchSuppliers()
   }
 })
 </script>
@@ -75,7 +79,7 @@ onMounted( async ()=>{
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
 			<baseTable :columns="columns" :data="supplierStore.supplierList" class="table">
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
+					<button @click="supplierStore.detailSupplier(item)" class="uk-margin-small-right btn-edit"><IconEye :size="18"/></button>
 					<button @click="deleteSupplier(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>

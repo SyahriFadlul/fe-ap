@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import './axios'
+import { useRoute, useRouter } from 'vue-router'
 
 
 import UIkit from 'uikit';
@@ -29,6 +30,7 @@ pinia.use(({ store }) => {
     store.router = markRaw(router)
     store.UIkit = markRaw(UIkit)
     store.Swal = markRaw(Swal)
+    store.route = markRaw(useRoute)
     // store.$subscribe((state) => {
     //     localStorage.setItem('appState', JSON.stringify(state));
     //   })

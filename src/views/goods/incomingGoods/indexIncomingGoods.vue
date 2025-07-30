@@ -2,9 +2,12 @@
 import { useIncomingGoodsStore } from '@/stores/incomingGoods';
 import { onMounted, ref, watch } from 'vue';
 import baseTable from '@/components/baseTable.vue';
-import { IconFilter, IconSortAscending, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconFilter, IconSortAscending, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
 import { useRoute, useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
+import OffCanvasDetail from '@/components/OffCanvasDetail.vue';
+import UIkit from 'uikit';
 
 const incomingGoodsStore = useIncomingGoodsStore()
 const route = useRoute()
@@ -30,10 +33,75 @@ async function clickCallback(page){
   })  
 }
 
+function deleteIncomingGoods(item){
+  Swal.fire({
+    title: 'Yakin ingin menghapus transaksi?',
+    text: `Invoice: ${item.invoice}`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await incomingGoodsStore.deleteIncomingGoods(item.id)
+        Swal.fire({
+          title: 'Dihapus!',
+          text: 'Barang berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+		const page = 1
+		router.push({
+			name:'incomingGoods.index',
+			query:{...route.query, page}
+		})        
+      } catch (error) {
+        console.log(error);
+        
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus.',
+          icon: 'error',
+        })
+      }
+    }
+  })
+}
+const openCanvas = () => {
+  UIkit.offcanvas('#detailCanvas').show()
+}
+
+const rows = [
+  {
+    fields: [
+      { label: 'Nama Supplier', component: 'input', props: { type: 'text', value: 'PT Kimia Farma', disabled: true } }
+    ]
+  },
+  {
+    fields: [
+      { label: 'Satuan', component: 'input', props: { type: 'text', value: 'Botol', disabled: true } },
+      { label: 'Isi per Satuan', component: 'input', props: { type: 'text', value: '100 ml', disabled: true } },
+      { label: 'Jumlah', component: 'input', props: { type: 'text', value: '5', disabled: true } },
+    ]
+  },
+]
+const tableItems = [
+  { batch: 'B123', qty: 5, price: '20.000' },
+  { batch: 'B124', qty: 3, price: '22.000' },
+]
+const columns2 = [
+  { key: 'batch', label: 'Batch' },
+  { key: 'qty', label: 'Qty' },
+  { key: 'price', label: 'Harga' },
+];
+
 watch(()=> route.query.page,
   async (page)=>{
-    incomingGoodsStore.pagination.currentPage = page    
-    await incomingGoodsStore.getIncomingGoodsData(page)
+
+    incomingGoodsStore.pagination.currentPage = parseInt(page)    
+    await incomingGoodsStore.getIncomingGoodsData(parseInt(page))
   }
 )
 
@@ -67,23 +135,23 @@ onMounted( async () => {
 					<span>Rp.{{ rupiahNum(item.amount) }}</span>
 				</template>
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
+					<button @click="incomingGoodsStore.showDetails(item)" class="uk-margin-small-right btn-edit"><IconEye :size="18"/></button>
+					<button @click.stop="deleteIncomingGoods(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div> 
     <paginate
-	v-model="incomingGoodsStore.pagination.currentPage"
-    :page-count="incomingGoodsStore.pagination.totalPage"
-	:page-range="3"
-	:margin-pages="3"
-	:click-handler="clickCallback"
-	:prev-text="'Sebelumnya'"
-	:next-text="'Selanjutnya'"
-	:container-class="'pagination'"
-	:page-class="'page-item'"
-	/>
-	</div>
+    v-model="incomingGoodsStore.pagination.currentPage"
+      :page-count="incomingGoodsStore.pagination.totalPage"
+    :page-range="3"
+    :margin-pages="3"
+    :click-handler="clickCallback"
+    :prev-text="'Sebelumnya'"
+    :next-text="'Selanjutnya'"
+    :container-class="'pagination'"
+    :page-class="'page-item'"
+    />
+  </div>
 </template>
 <style  scoped>
 .search {
@@ -112,5 +180,9 @@ onMounted( async () => {
   font-size: 12px;
   border: 1px solid rgb(241, 226, 226);
   border-radius: 10px;
+  color: black;
+}
+.tet > th {
+  color: black !important;
 }
 </style>

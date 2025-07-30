@@ -7,15 +7,16 @@ import { IconFilter, IconSortAscending, IconPlus, IconEdit, IconTrash } from '@t
 const outgoingGoodsStore = useOutgoingGoodsStore()
 
 const columns = [
-  { key: 'received_date', label: 'Tanggal Penerimaan' },
+  { key: 'date', label: 'Tanggal Keluar' },
   { key: 'invoice', label: 'Nomor Faktur' },
-  { key: 'supplier', label: 'Supplier' },
+  { key: 'type', label: 'Tipe Transaksi' },
   { key: 'amount', label: 'Total' },
+  { key: 'note', label: 'Catatan' },
 ];
 
 onMounted( async () => {
 	if (outgoingGoodsStore.outgoingGoodsItemList.length < 1){
-    await outgoingGoodsStore.getIncomingGoodsData()
+    await outgoingGoodsStore.fetchOutgoingGoods(1)
   }
 	
 }) 

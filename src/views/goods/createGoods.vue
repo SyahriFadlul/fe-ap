@@ -29,13 +29,13 @@ async function cancel(){
 onMounted( async ()=>{
   goodsStore.errors = []
   if (categoryStore.categoryItems.length < 1) {
-    await categoryStore.getCategories()    
+    await categoryStore.fetchCategories()    
   }
   if (unitStore.unitItems.length < 1){
-    await unitStore.getUnits()
+    await unitStore.fetchUnits()
   }
   if (goodsStore.goodsItems.length < 1){
-    await goodsStore.getGoods() 
+    await goodsStore.fetchGoods() 
   } 
 
     
@@ -139,20 +139,24 @@ onMounted( async ()=>{
   border-radius: 8px;
 }
 
-.btn-cnl {
-  padding: 10px 5px;
-  width: 130px;
+.btn-cnl{
   border: none;
   border-radius: 8px;
+  padding: 10px;
+  background-color: #E5E5E5;
 }
-
-.btn-sve {
-  padding: 10px 5px;
-  width: 130px;
+.btn-cnl:hover{
+  background-color: #D5D5D5;
+}
+.btn-sve{
+  padding: 10px;
   border: none;
   border-radius: 8px;
-  color: rgb(2, 29, 16);
-  background-color: #58F566;
+  color: white;
+  background-color: #1E87F0; /*1E87F0  0F7AE5*/
+}
+.btn-sve:hover{
+  background-color: #0F7AE5;
 }
 
 .label{

@@ -48,6 +48,14 @@ const router = createRouter({
           },
         },
         {
+          path: '/goods/:id/detail',
+          name: 'goods.detail',
+          component: () => import('@/views/goods/detailGoods.vue'),
+          meta:{
+            title: 'inventori'
+          },
+        },
+        {
           path: '/incoming-goods',
           name: 'incomingGoods.index',
           component: () => import('@/views/goods/incomingGoods/indexIncomingGoods.vue'),
@@ -59,6 +67,14 @@ const router = createRouter({
           path: '/incoming-goods/create',
           name: 'incomingGoods.create',
           component: () => import('@/views/goods/incomingGoods/createIncomingGoods.vue'),
+          meta:{
+            title: 'barang masuk'
+          },
+        },
+        {
+          path: '/incoming-goods/:id/detail',
+          name: 'incomingGoods.detail',
+          component: () => import('@/views/goods/incomingGoods/detailIncomingGoods.vue'),
           meta:{
             title: 'barang masuk'
           },
@@ -80,6 +96,14 @@ const router = createRouter({
           },
         },
         {
+          path: '/outgoing-goods/:id/edit',
+          name: 'outgoingGoods.edit',
+          component: () => import('@/views/goods/outgoingGoods/editOutgoingGoods.vue'),
+          meta:{
+            title: 'barang keluar'
+          },
+        },
+        {
           path: '/categories',
           name: 'category.index',
           component: () => import('@/views/categories/indexCategory.vue'),
@@ -91,6 +115,14 @@ const router = createRouter({
           path: '/categories/create',
           name: 'category.create',
           component: () => import('@/views/categories/createCategory.vue'),
+          meta:{
+            title: 'kategori'
+          },
+        },
+        {
+          path: '/categories/:id/detail',
+          name: 'category.detail',
+          component: () => import('@/views/categories/detailCategory.vue'),
           meta:{
             title: 'kategori'
           },
@@ -112,6 +144,14 @@ const router = createRouter({
           },      
         },
         {
+          path: '/suppliers/:id/detail',
+          name: 'supplier.detail',
+          component: () => import('@/views/suppliers/detailSupplier.vue'),
+          meta:{
+            title: 'supplier'
+          },
+        },
+        {
           path: '/users',
           name: 'user.index',
           component: () => import('@/views/users/indexUser.vue'),
@@ -123,6 +163,14 @@ const router = createRouter({
           path: '/users/create',
           name: 'user.create',
           component: () => import('@/views/users/createUser.vue'),
+          meta:{
+            title: 'manajemen user'
+          },
+        },
+        {
+          path: '/users/:id/detail',
+          name: 'user.detail',
+          component: () => import('@/views/users/detailUser.vue'),
           meta:{
             title: 'manajemen user'
           },

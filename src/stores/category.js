@@ -11,14 +11,16 @@ export const useCategoryStore = defineStore('category',{
             totalPage: 0,
             lastPage: 1,
         },
-        errors:[]
+        errors:[],
+        selectedCategory: [],
+        editing: false
     }),
     getters:{
         categoryItems: (state) => state.categoryList,
         error: (state) => state.errors
     },
     actions:{
-        async getCategories(page = 1){
+        async fetchCategories(page = 1){
             axios.get(`api/category?page=${page}`)
             .then( res => {
                 this.categoryList = res.data.data
@@ -30,6 +32,11 @@ export const useCategoryStore = defineStore('category',{
             })
             .catch( err => console.log(err)
             )
+        },
+        async fetchCategory(id){
+            axios.get(`api/category/${id}`)
+            .then( res => this.selectedCategory = res.data)
+            .catch( err => console.log(err))
         },
         async createCategory(data){
             this.errors = []
@@ -44,7 +51,7 @@ export const useCategoryStore = defineStore('category',{
                     pos: 'top-center',
                     timeout: 3000
                 }) 
-                await this.getCategories()
+                await this.fetchCategories()
                 this.router.push('/categories')
             })
             .catch( err =>{ 
@@ -52,14 +59,43 @@ export const useCategoryStore = defineStore('category',{
                     this.errors = err.response.data.errors
                     console.log(this.errors.name[0]);       
                 }
-                console.log(err.message);
-                
+                console.log(err.message);                
+            })
+        },
+        async detailCategory(data){
+            this.selectedCategory = data
+            this.router.push({
+                name:'category.detail',
+                params:{id:data.id}
+            })
+        },
+        async editCategory(){
+            this.editing = true
+        },
+        async updateCategory(data){
+            await axios.put(`api/category/${this.selectedCategory.id}`, data)
+            .then(async res => {
+                this.UIkit.notification({
+                    message: 'Kategori berhasil diperbarui!',
+                    status: 'success',
+                    pos: 'top-center',
+                    timeout: 3000
+                })
+                await this.fetchCategories()
+                this.router.push('/categories') 
+            })
+            .catch( err =>{ 
+                if(err.status === 422){
+                    this.errors = err.response.data.errors
+                    console.log(this.errors.name[0]);       
+                }
+                console.log(err.message);                
             })
         },
         async deleteCategory(id){
             await axios.delete(`api/category/${id}`)
             .then(async res => {
-                await this.getCategories()
+                await this.fetchCategories()
                 this.router.push('/categories')
                 
                 return true

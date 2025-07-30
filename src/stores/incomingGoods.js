@@ -1,6 +1,7 @@
 import axios from "axios";
 import { defineStore } from "pinia";
 import { useGoodsStore } from "./goods";
+import { data } from "uikit";
 
 export const useIncomingGoodsStore = defineStore('incomingGoods',{
     state: () => ({
@@ -21,23 +22,26 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         },
         selectedIncomingGoodsItems: null,//vue select
         selectedIncomingGoods:{ 
-            id: null,
-            name: '',
+            goods_id: null,
+            goods: '',
             batch_number: '',
             qty: 1,
             conversion_qty: 1,
             unit_id: null,
-            price_per_line: null,
+            unit_price: null,
             expiry_date: null,
         },
         incomingGoodsCart:[],
         incomingGoodsForm: {
+            id: null,
             invoice: '',
             supplier_id: null,
             received_date: '',
             items: [], // atau incomingGoodsCart
         },
         editingTempId: null,
+        editing: false, //untuk halaman detail/edit incoming goods
+        errors:[],
     }),
     getters:{
         incomingGoodsItemList: (state) => state.incomingGoodsList,
@@ -54,7 +58,7 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         selectedCartItemBatchNumber: (state) => state.selectedIncomingGoods.batch_number,
         selectedCartItemQty: (state) => state.selectedIncomingGoods.qty,
         selectedCartItemUnit: (state) => state.selectedIncomingGoods.unit_id,
-        selectedCartItemPrice: (state) => state.selectedIncomingGoods.price_per_line,
+        selectedCartItemPrice: (state) => state.selectedIncomingGoods.unit_price,
         selectedCartItemExpiryDate: (state) => state.selectedIncomingGoods.expiry_date,
         btnAbleToAdd(state){
             const keysToCompare = ['id', 'supplier_id', 'batch_number']
@@ -66,12 +70,12 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         },
         totalAmount(state){
             // console.log(state.incomingGoodsForm.items.reduce((sum, item) => {
-            //     return sum + (item.qty * item.price_per_line)
+            //     return sum + (item.qty * item.unit_price)
             // },0));
             console.log(state.incomingGoodsForm.items);
             
             return state.incomingGoodsForm.items.reduce((sum, item) => {
-                return sum + (item.qty * item.price_per_line)}, 0)
+                return sum + (item.qty * item.unit_price)}, 0)
         },
         isEditing: (state) => state.editingTempId !== null,
     },
@@ -108,6 +112,37 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                 throw err
             })
         },
+        async updateIncomingGoods(){
+            const data = this.incomingGoodsForm
+            console.log(this.totalAmount);
+            
+            await axios.put(`api/incoming-goods/${this.incomingGoodsForm.id}`, {
+                supplier_id: data.supplier_id,
+                invoice: data.invoice,
+                received_date: data.received_date,
+                amount: this.totalAmount,
+                items: data.items,
+            }).then(res => console.log(res)
+            )
+            .catch(err => {
+                console.log(err);
+                
+                if(err.status === 500){
+                    throw 'Terjadi kesalahan saat merubah transaksi. Coba lagi nanti.'
+                }
+                if(err.response && err.response.status === 422){
+                    this.errors = err.response.data.error
+                }
+                throw err
+            })
+        },
+        async deleteIncomingGoods(id){
+            await axios.delete(`api/incoming-goods/${id}`)
+            .then( res => {
+                console.log(res.status);
+            })
+            .catch( err => {throw err})
+        },
         async editCartItem(data){
             this.selectedIncomingGoods = data
         },
@@ -129,15 +164,30 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             .catch( err => console.log(err))
         },
         showDetails(item){
-            this.incomingGoodsItemList = item
+            this.clearCart()
+            this.clearCurrentItem()
+            const {invoice, items, received_date, supplier_id, id} = item
+            console.log(item);
+            this.incomingGoodsForm.id = id
+            this.incomingGoodsForm.invoice = invoice
+            this.incomingGoodsForm.received_date = received_date
+            this.incomingGoodsForm.supplier_id = supplier_id
+            this.incomingGoodsForm.items = items
+            this.router.push({
+                name:'incomingGoods.detail',
+                params:{id:id}
+            })
+        },
+        async editIncomingGoods(){
+            this.editing = true
         },
         addItemToCart() {
             console.log(this.selectedIncomingGoods);
             console.log(this.selectedIncomingGoodsItems);
             const data = {
                 ...this.selectedIncomingGoods,
-                id: this.selectedIncomingGoodsItems.id,
-                name: this.selectedIncomingGoodsItems.name,
+                goods_id: this.selectedIncomingGoodsItems.goods_id,
+                goods: this.selectedIncomingGoodsItems.goods,
             }               
             console.log(data);
                      
@@ -150,8 +200,8 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         },
         editItemFromCart(item) { //item = incominggoodsform
             console.log(item);
-            const{id, name, tempId,...rest} = item
-            this.selectedIncomingGoodsItems = {id, name}
+            const{goods_id, goods, tempId,...rest} = item
+            this.selectedIncomingGoodsItems = {goods_id, goods}
             this.selectedIncomingGoods = { ...rest} // isi form
             this.editingTempId = item.tempId
         },
@@ -160,8 +210,8 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             if (index !== -1) {
                 this.incomingGoodsForm.items.splice(index, 1, {
                 ...this.selectedIncomingGoods,
-                id: this.selectedIncomingGoodsItems.id,
-                name: this.selectedIncomingGoodsItems.name,
+                goods_id: this.selectedIncomingGoodsItems.goods_id,
+                goods: this.selectedIncomingGoodsItems.goods,
                 tempId: this.editingTempId,
                 })
             }
@@ -182,13 +232,13 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         },
         clearCurrentItem(){
             this.selectedIncomingGoods = {
-                id: null,
-                name: '',
+                goods_id: null,
+                goods: '',
                 batch_number: '',
                 qty: 1,
                 conversion_qty: 1,
                 unit_id: null,
-                price_per_line: null,
+                unit_price: null,
                 expiry_date: null,
             }
             this.selectedIncomingGoodsItems = null

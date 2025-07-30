@@ -8,13 +8,13 @@ const supplierStore = useSupplierStore()
 const router = useRouter()
 
 const data = ref({
-  name: '',
-  contact: '',
-  note: '',
+  name: supplierStore.selectedSupplier.name,
+  contact: supplierStore.selectedSupplier.contact,
+  note: supplierStore.selectedSupplier.note,
 })
 
 function cancel(){
-  router.go(-1)
+  supplierStore.editing = false
 }
 
 onMounted( async ()=>{
@@ -26,7 +26,7 @@ onMounted( async ()=>{
     <div class="uk-flex uk-flex-row uk-flex-middle uk-margin-small-bottom">
       <router-link to="/suppliers">
         <icon-arrow-left :size="24"/>
-      </router-link>        
+      </router-link>
       <div class="uk-text-bold uk-margin-small-left" style="font-size: 18px;">
         Tambah Supplier Baru
       </div>
@@ -34,25 +34,26 @@ onMounted( async ()=>{
     <div class="card">
       <div class="uk-margin-small-bottom">
         <div class="label">Nama Supplier</div>
-        <input type="text" class="uk-width-3-5 uk-input uk-form-small" v-model="data.name">
+        <input type="text" class="uk-width-3-5 uk-input uk-form-small" :disabled="!supplierStore.editing" v-model="data.name">
         <span v-if="supplierStore.error !== ''" v-for="error in supplierStore.error.name" 
         class="uk-text-danger uk-text-small uk-text-italic uk-margin-small-left">{{ error }}</span> 
-      </div>  
+      </div>
       <div class="uk-margin-small-bottom">
         <div class="label">Kontak</div>
-        <input type="text" class="uk-width-3-5 uk-input uk-form-small" v-model="data.contact">
+        <input type="text" class="uk-width-3-5 uk-input uk-form-small" :disabled="!supplierStore.editing" v-model="data.contact">
         <span v-if="supplierStore.error !== ''" v-for="error in supplierStore.error.contact" 
         class="uk-text-danger uk-text-small uk-text-italic uk-margin-small-left">{{ error }}</span> 
       </div>  
       <div class="uk-margin-small-bottom">
         <div class="label">Catatan <span class="uk-text-capitalize uk-text-muted">(Opsional)</span></div>
-        <textarea type="text" class="uk-width-3-5 uk-input uk-form-small" v-model="data.note"></textarea> 
+        <textarea type="text" class="uk-width-3-5 uk-input uk-form-small" :disabled="!supplierStore.editing" v-model="data.note"></textarea> 
         <span v-if="supplierStore.error !== ''" v-for="error in supplierStore.error.note" 
         class="uk-text-danger uk-text-small uk-text-italic uk-margin-small-left">{{ error }}</span> 
-      </div>  
+      </div>    
       <div class="uk-flex uk-flex-row uk-flex-right uk-margin-medium-top">
-        <button class="btn-cnl uk-margin-medium-right" @click="cancel">Batalkan</button>
-        <button class="btn-sve" @click="supplierStore.createSupplier(data)">Simpan</button>
+        <button class="btn-cnl uk-margin-medium-right" @click="cancel()" v-if="supplierStore.editing">Batalkan</button>
+        <button class="btn-sve uk-text-capitalize" @click="supplierStore.editSupplier()" v-if="!supplierStore.editing" style="width: 75px;">edit</button>
+        <button class="btn-sve" @click="supplierStore.updateSupplier(data)" v-if="supplierStore.editing">Simpan</button>
       </div>
     </div>
   </div>
@@ -96,7 +97,11 @@ onMounted( async ()=>{
 .unit-wrapper {
   width: 207.78px
 }
-
+input:disabled, textarea:disabled {
+  background-color: #f9f9f9 !important;
+  color: #000 !important;
+  cursor: default;
+}
 select {
   width: 150px;
 }

@@ -3,7 +3,7 @@ import { useGoodsStore } from '@/stores/goods'
 import { onMounted, ref, watch } from 'vue'
 import baseTable from '../../components/baseTable.vue'
 import Paginate from 'vuejs-paginate-next';
-import { IconDownload, IconBox, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue'
+import { IconDownload, IconBox, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart } from 'echarts/charts'
@@ -131,13 +131,13 @@ watch(()=> goodsStore.categoryDistribution,
 watch(()=> route.query.page,
   async (page)=>{
     goodsStore.pagination.currentPage = page    
-    await goodsStore.getGoods(page)
+    await goodsStore.fetchGoods(page)
   }
 )
 
 onMounted( async ()=>{
   if(goodsStore.goodsItems.length < 1){
-    await goodsStore.getGoods(1)
+    await goodsStore.fetchGoods(1)
   }
   chartStore.setCategoryDistributionOption()
 //     Swal.fire({
@@ -160,7 +160,7 @@ onMounted( async ()=>{
       </div>                
       <div class="info-card chart-card">
         Distribusi Kategori
-        <v-chart class="chart" :option="option" autoresize="true"/>
+        <v-chart class="chart" :option="option"/>
       </div>
     </div>
     <hr class="uk-divider uk-margin-small">
@@ -178,8 +178,8 @@ onMounted( async ()=>{
     <div class="uk-overflow-auto uk-flex">      
       <baseTable :columns="columns" :data="goodsStore.goodsItems" class="table">
         <template #actions="{ item }">
-          <button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="deleteGoods(item)" class="btn-del"><IconTrash :size="18"/></button>
+          <button @click="goodsStore.detailGoods(item)" class="uk-margin-small-right btn-edit" uk-tooltip="Lihat Detail Item"><IconEye :size="18"/></button>
+					<button @click="deleteGoods(item)" class="btn-del" uk-tooltip="Hapus Item"><IconTrash :size="18"/></button>
         </template>
       </baseTable>
     </div>

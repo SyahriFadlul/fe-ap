@@ -11,14 +11,16 @@ export const useSupplierStore = defineStore('supplier',{
             totalPage: 0,
             lastPage: 1,
         },
-        errors:[],
+        selectedSupplier: [],
+        errors: [],
+        editing: false
     }),
     getters:{
         supplierItems: (state) => state.supplierList,
         error: (state) => state.errors,
     },
     actions:{
-        async getSuppliers(page = 1){
+        async fetchSuppliers(page = 1){
             axios.get(`api/supplier?page=${page}`)
             .then( res => {
                 this.supplierList = res.data.data
@@ -46,7 +48,7 @@ export const useSupplierStore = defineStore('supplier',{
                     pos: 'top-center',
                     timeout: 3000
                 }) 
-                await this.getSuppliers()
+                await this.fetchSuppliers()
                 this.router.push({name:'supplier.index'})
             })
             .catch( err =>{ 
@@ -58,15 +60,45 @@ export const useSupplierStore = defineStore('supplier',{
                 
             })
         },
+        async detailSupplier(data){
+            this.selectedSupplier = data
+            this.router.push({
+                name:'supplier.detail',
+                params:{id:data.id}
+            })
+        },
+        async editSupplier(){
+            this.editing = true
+        },
+        async updateSupplier(data){
+            await axios.put(`api/supplier/${this.selectedSupplier.id}`, data)
+            .then(async res => {
+                this.UIkit.notification({
+                    message: 'Supplier berhasil diperbarui!',
+                    status: 'success',
+                    pos: 'top-center',
+                    timeout: 3000
+                })
+                await this.fetchSuppliers()
+                this.router.push('/suppliers') 
+            })
+            .catch( err =>{ 
+                if(err.status === 422){
+                    this.errors = err.response.data.errors
+                    console.log(this.errors.name[0]);       
+                }
+                console.log(err.message);                
+            })
+        },
         async deleteSupplier(id){
             await axios.delete(`api/supplier/${id}`)
             .then(async res => {
-                await this.getSuppliers()
+                await this.fetchSuppliers()
                 this.router.push({name:'supplier.index'})
                 
                 return true
             })
-            .catch( err => false)
+            .catch( err => {throw err})
         },
         async downloadGoods(){
             axios.get('api/goods/get-pdf', {

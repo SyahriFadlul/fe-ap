@@ -47,10 +47,14 @@ const rupiahNum = function (num) {
   return price + ",00";
 };
 
-function handleCancel(){
+function goBack(){
   incomingGoodsStore.clearCurrentItem()
   incomingGoodsStore.clearCart()
   router.push({name:'incomingGoods.index'})
+}
+
+function cancel(){
+  incomingGoodsStore.editing = false
 }
 
 function handleSubmit(){
@@ -96,7 +100,7 @@ function handleSubmit(){
     return
   }
   Swal.fire({
-    title: 'Yakin ingin menyimpan transaksi ini?',
+    title: 'Yakin ingin mengubah transaksi ini?',
     icon: 'question',
     showCancelButton: true,
     confirmButtonText: 'Ya, simpan',
@@ -104,10 +108,10 @@ function handleSubmit(){
   }).then(async res=>{
     if(res.isConfirmed){
       try {
-        await incomingGoodsStore.createIncomingGoods()
+        await incomingGoodsStore.updateIncomingGoods()
         Swal.fire({
-          title: 'Disimpan!',
-          text: 'Transaksi Berhasil Disimpan.',
+          title: 'Diubah!',
+          text: 'Transaksi Berhasil Diubah.',
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
@@ -118,7 +122,7 @@ function handleSubmit(){
           incomingGoodsStore.clearCart()
           router.push({name:'incomingGoods.index'})})
       } catch (error) {
-        const message = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan transaksi. Coba lagi nanti.'  
+        const message = error.response?.data?.error || 'Terjadi kesalahan saat mengubah transaksi. Coba lagi nanti.'  
         Swal.fire({
           title: 'Gagal!',
           text: message,
@@ -150,6 +154,7 @@ const columns = [
        
 
 onMounted( async ()=>{
+  incomingGoodsStore.errors = []
   if (categoryStore.categoryItems.length < 1){
     await categoryStore.fetchCategories()
   }
@@ -168,17 +173,24 @@ onMounted( async ()=>{
   <div>
     <div class="uk-flex uk-flex-row uk-flex-middle uk-margin-small-bottom">
       <router-link to="/incoming-goods">
-        <!-- <button class="btn-back uk-button uk-button-small"> -->
+        <button class="btn-back" @click="goBack()">
           <icon-arrow-left :size="24"/>
-        <!-- </button>         -->
+        </button>        
       </router-link>
       <div class="uk-text-bold uk-margin-small-left" style="font-size: 18px;">
-        Tambah Barang Masuk Baru
+        {{ incomingGoodsStore.editing ? 'Ubah Data Barang Masuk':'Detail Data Barang Masuk' }}
       </div>
     </div>
-    <div class="uk-flex uk-flex-right uk-margin-small-bottom">
-      <button class="btn-cnl uk-margin-medium-right" @click="handleCancel()">Batalkan</button>
-      <button class="btn-sve" @click="handleSubmit()">Simpan</button>
+    <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small-bottom">
+      <div>
+        <div class="uk-text-danger uk-text-small" v-if="incomingGoodsStore.errors.length > 0">*{{ incomingGoodsStore.errors }}</div>
+      </div>
+      <div class="uk-flex uk-flex-middle">
+        <button class="btn-cnl uk-margin-medium-right" @click="cancel()" v-if="incomingGoodsStore.editing">Batalkan</button>
+        <button class="btn-sve uk-text-capitalize" @click="incomingGoodsStore.editIncomingGoods()" 
+        v-if="!incomingGoodsStore.editing" style="width: 75px;">edit</button>
+        <button class="btn-sve" @click="handleSubmit()" v-if="incomingGoodsStore.editing">Simpan</button>
+      </div>
     </div>
     <div class="uk-flex uk-flex-between">
       <div class="uk-width-1-2"> <!--KIRI-->
@@ -187,16 +199,16 @@ onMounted( async ()=>{
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Tanggal Penerimaan</label>
             <div class="uk-width-1-1">
-              <VueDatePicker v-model="incomingGoodsStore.incomingGoodsForm.received_date"/>
+              <VueDatePicker v-model="incomingGoodsStore.incomingGoodsForm.received_date" :disabled="!incomingGoodsStore.editing"/>
             </div>
           </div>   
           <div class="uk-margin-small-bottom">
             <div>Nomor Faktur</div>
-            <input type="text" class="uk-input uk-form-small" v-model="incomingGoodsStore.incomingGoodsForm.invoice">
+            <input type="text" class="uk-input uk-form-small" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.incomingGoodsForm.invoice">            
           </div>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <div class="label">Supplier</div>
-            <select class="uk-form-small uk-width-1-1" v-model="incomingGoodsStore.incomingGoodsForm.supplier_id">
+            <select class="uk-form-small uk-width-1-1" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.incomingGoodsForm.supplier_id">
               <option value="null" class="uk-text-italic uk-text-capitalize" disabled selected>- - Pilih Supplier - -</option>
               <option v-for="(supplier, index ) in supplierStore.supplierItems" :key="supplier.id" 
               :value="supplier.id" >
@@ -210,8 +222,8 @@ onMounted( async ()=>{
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Nama</label>
             <div class="uk-flex uk-flex-middle">
-              <v-select :options="goodsStore.result" :filterable="false" label="goods" v-model="incomingGoodsStore.selectedIncomingGoodsItems"
-                @search="goodsStore.getSelectSearch" :loading="goodsStore.sloading" class="uk-width-1-1">
+              <v-select :options="goodsStore.result" :filterable="false" label="goods" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoodsItems"
+                @search="goodsStore.getSelectSearch" placeholder="ketik untuk mencari barang" :loading="goodsStore.sloading" class="uk-width-1-1 v-sel">
                 <template #no-options>
                   ketik untuk mencari barang..
                 </template>
@@ -234,12 +246,12 @@ onMounted( async ()=>{
           </div>          
           <div class="uk-flex uk-flex-column uk-margin-small-bottom uk-width-1-1">
             <div class="label">Nomor Batch</div>
-            <input type="text" class="uk-form-small" v-model="incomingGoodsStore.selectedIncomingGoods.batch_number">   
+            <input type="text" class="uk-form-small" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoods.batch_number">   
           </div>
           <div class="uk-grid-small uk-child-width-expand@s uk-margin-small-bottom" uk-grid>
             <div>
               <div class="label">Satuan</div>
-              <select class="uk-text-capitalize uk-form-small uk-width-1-1" v-model="incomingGoodsStore.selectedIncomingGoods.unit_id">
+              <select class="uk-text-capitalize uk-form-small uk-width-1-1" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoods.unit_id">
                 <option value="null" class="uk-text-italic" disabled selected>- - Pilih Satuan - -</option>
                 <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.id" class="" >
                   {{ unit.name }}
@@ -248,22 +260,22 @@ onMounted( async ()=>{
             </div> 
             <div>
               <div class="label">Jumlah</div>
-              <input type="number" class="uk-input uk-form-small" v-model="incomingGoodsStore.selectedIncomingGoods.qty">
+              <input type="number" class="uk-input uk-form-small" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoods.qty">
             </div>
             <div>
               <div class="label" uk-tooltip="Misalnya 1 boks 10 strip">Isi Per Satuan</div>
-              <input type="number" class="uk-form-small input-conv uk-width-1-1" v-model="incomingGoodsStore.selectedIncomingGoods.conversion_qty" 
+              <input type="number" class="uk-form-small input-conv uk-width-1-1" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoods.conversion_qty" 
               placeholder="cth:1 boks,10 strip">
             </div>
           </div>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Harga Per Satuan</label>
-            <input type="number" placeholder="Rp.00,00-" class="uk-input uk-form-small uk-width-1-1" v-model="incomingGoodsStore.selectedIncomingGoods.unit_price">
+            <input type="number" placeholder="Rp.00,00-" class="uk-input uk-form-small uk-width-1-1" :disabled="!incomingGoodsStore.editing" v-model="incomingGoodsStore.selectedIncomingGoods.unit_price">
           </div>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Tanggal Kedaluwarsa</label>
             <div class="uk-width-1-1">
-              <VueDatePicker v-model="incomingGoodsStore.selectedIncomingGoods.expiry_date"/>
+              <VueDatePicker v-model="incomingGoodsStore.selectedIncomingGoods.expiry_date" :disabled="!incomingGoodsStore.editing"/>
             </div>
           </div>
           <div class="uk-margin uk-flex uk-flex-between">
@@ -278,7 +290,7 @@ onMounted( async ()=>{
             </button>
             <button class="btn-tocart uk-margin-auto-left" @click="handleEditOrAdd" type="button" 
             :disabled="incomingGoodsStore.selectedIncomingGoodsItems === null || 
-            incomingGoodsStore.selectedIncomingGoods.batch_number === '' ? true : false">
+            incomingGoodsStore.selectedIncomingGoods?.batch_number === '' ? true : false">
               {{ incomingGoodsStore.isEditing ? 'Simpan Perubahan' : 'Tambah ke Daftar' }}
             </button>
           </div>
@@ -322,10 +334,15 @@ onMounted( async ()=>{
 }
 .btn-back{
   border: none;
-  border-radius: 8px;
+  color: #1E87F0;
+  /* border-radius: 8px; */
+  background-color: transparent;
+}
+.btn-back:hover{
+  color: #0F7AE5;
 }
 .btn-cnl {
-  padding: 2px !important;
+  padding: 10px !important;
   width: 120px;
   border: none;
   border-radius: 8px;
@@ -409,5 +426,21 @@ onMounted( async ()=>{
 }
 .lyout-right{
   width: 900px;
+}
+input:disabled, select:disabled {
+  background-color: #f9f9f9 !important;
+  color: #000 !important;
+  cursor: default;
+}
+select:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+  background-color: #f9f9f9; /* opsional, biar beda dengan enabled */
+}
+
+.vs__search::placeholder {
+  font-style: italic;
 }
 </style>

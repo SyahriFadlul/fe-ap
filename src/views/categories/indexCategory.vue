@@ -2,7 +2,7 @@
 import { useCategoryStore } from '@/stores/category';
 import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
-import { IconEdit, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
 import Swal from 'sweetalert2';
 import { watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -58,13 +58,13 @@ async function clickCallback(page){
 watch(()=> route.query.page,
   async (page)=>{
     categoryStore.pagination.currentPage = page    
-    await categoryStore.getGoods(page)
+    await categoryStore.fetchCategories(page)
   }
 )
 
 onMounted( async ()=>{
 	if (categoryStore.categoryItems.length < 1){
-    await categoryStore.getCategories()
+    await categoryStore.fetchCategories()
   }
 })
 </script>
@@ -86,8 +86,8 @@ onMounted( async ()=>{
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
 			<baseTable :columns="columns" :data="categoryStore.categoryItems" class="table">
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="deleteCategory(item)" class="btn-del"><IconTrash :size="18"/></button>
+					<button @click="categoryStore.detailCategory(item)" class="uk-margin-small-right btn-edit" uk-tooltip="Lihat Detail Item"><IconEye :size="18"/></button>
+					<button @click="deleteCategory(item)" class="btn-del" uk-tooltip="Hapus Item"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>
