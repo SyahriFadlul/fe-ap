@@ -117,7 +117,7 @@ export const useAuthStore = defineStore("auth",{
             })
         },
         async handleLogout () {
-            await axios.post('/logout')
+            await axios.post('api/logout')
             .then( res => {
                 this.authToken = []
                 this.authUser = null

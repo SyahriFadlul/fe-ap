@@ -30,12 +30,9 @@ onMounted(async () => {
         </div>
         <button class="uk-button uk-button-primary uk-width-1-1" type="submit">Login</button>
       </form>
-      <button @click="authStore.skip()">skip</button>
+      <!-- <button @click="authStore.skip()">skip</button> -->
     </div>
   </div>
 </template>
 <style scoped>
-.login {
-  margin: 0 !important;
-}
 </style>

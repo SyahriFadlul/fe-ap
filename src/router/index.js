@@ -96,9 +96,9 @@ const router = createRouter({
           },
         },
         {
-          path: '/outgoing-goods/:id/edit',
-          name: 'outgoingGoods.edit',
-          component: () => import('@/views/goods/outgoingGoods/editOutgoingGoods.vue'),
+          path: '/outgoing-goods/:id/detail',
+          name: 'outgoingGoods.detail',
+          component: () => import('@/views/goods/outgoingGoods/detailOutgoingGoods.vue'),
           meta:{
             title: 'barang keluar'
           },

@@ -162,10 +162,6 @@ onMounted( async () => {
   border-radius: 5px;
 }
 
-.btn-fs {
-	border: none;
-}
-
 .btn-add {
 	border: none;
 	padding: 8px;

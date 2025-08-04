@@ -17,7 +17,7 @@ const menus = {
 		path: '/dashboard',
 	},
 	goods: {
-		name: 'Inventori',
+		name: 'Data Barang',
 		icon: IconBox,
 		path: '/goods',
 	},
@@ -59,7 +59,7 @@ onMounted ( () => {
 	<Transition>
 		<div id="side-bar" class="sidebar  uk-background-default" uk-viewport-height>
 			<div class="uk-flex uk-flex-middle uk-padding-small">
-				<img src="@/assets/logo.svg" width="35" uk-img>
+				<img src="@/assets/icons/logo.png" width="35" uk-img>
 				<div style="font-size: 18px;font-weight: 500;margin-left: 2px;" v-show="settingStore.isSidebarExpanded">Apotek Cijawura</div>
 			</div>
 			<template v-for="(menu,index) in menus" :key="index">
@@ -70,12 +70,10 @@ onMounted ( () => {
 					</RouterLink>
 				</div>
 			</template>
-			<div class="uk-margin-auto-top sbar-item uk-flex uk-flex-middle">
-				<button class="uk-text-decoration-none uk-padding-small btn-logout uk-flex uk-flex-middle" @onClick="authStore.handleLogout()">
-					<IconLogout :size="23" stroke-width="1.7" />
-					<span v-show="settingStore.isSidebarExpanded">Logout</span>
-				</button>
-			</div>
+			<button class="uk-margin-auto-top sbar-item uk-flex uk-flex-middle uk-text-decoration-none uk-padding-small btn-logout uk-flex uk-flex-middle" @click="authStore.handleLogout()">
+				<IconLogout :size="23" stroke-width="1.7" />
+				<span v-show="settingStore.isSidebarExpanded">Keluar</span>
+			</button>
 			<!-- <div :class="['sbar-item uk-flex uk-flex-middle uk-padding-small', { 'active-menu': $route.path === '/' }]">
 				<RouterLink class="uk-text-decoration-none uk-padding-small sbar-item-text uk-flex uk-flex-middle" to="/">
 					<IconLayoutDashboard :size="23" stroke-width="1.7"/>

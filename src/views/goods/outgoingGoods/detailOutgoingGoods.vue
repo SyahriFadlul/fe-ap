@@ -33,10 +33,14 @@ const rupiahNum = function (num) {
   return price + ",00";
 };
 
-function handleCancel(){
+function goBack(){
   outgoingGoodsStore.clearCurrentItem()
   outgoingGoodsStore.clearCart()
   router.push({name:'outgoingGoods.index'})
+}
+
+function cancel(){
+  outgoingGoodsStore.editing = false
 }
 
 function handleSubmit(){
@@ -89,7 +93,7 @@ function handleSubmit(){
   }).then(async res=>{
     if(res.isConfirmed){
       try {
-        await outgoingGoodsStore.createOutgoingGoods()
+        await outgoingGoodsStore.updateOutgoingGoods()
         Swal.fire({
           title: 'Disimpan!',
           text: 'Transaksi Berhasil Disimpan.',
@@ -98,11 +102,11 @@ function handleSubmit(){
           showConfirmButton: false,
         })
         .then(async res => {
-          return
           await outgoingGoodsStore.fetchOutgoingGoods(1)
           outgoingGoodsStore.clearCurrentItem()
           outgoingGoodsStore.clearCart()
           router.push({name:'outgoingGoods.index'})})
+          await goodsStore.fetchGoods()
       } catch (error) {
         const message = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan transaksi. Coba lagi nanti.'  
         Swal.fire({
@@ -131,16 +135,23 @@ function clickCallback(page){
 }
 
 const columns = [
-  { key: 'name', label: 'Nama' },
+  { key: 'goods', label: 'Nama' },
   { key: 'batch_number', label: 'Nomor Batch' },
 ];
 
-const transcType = ['Retur', 'Penjualan', 'Keperluan Internal', 'Lainnya']
-
+const transcType = ['retur', 'penjualan', 'keperluan internal', 'lainnya']
+const batchLoading = ref(false)
 watch(()=>outgoingGoodsStore.selectedOutgoingGoodsItems,
   async (item) => {
-    if(item && item.id){
-      await goodsStore.fetchAvailableGoodsBatches(item.id)
+    console.log(item);
+    
+    if(item && item.goods_id){
+      batchLoading.value = true
+      await goodsStore.fetchCurrentItemBatches(item.goods_id)
+        batchLoading.value = false
+      await unitStore.fetchGoodsUnit(item.goods_id)
+      console.log('masuk watch');
+      
     }
     if (item && goodsStore.inStockVueSelect.length > 0) {
       // Pilih batch pertama (FIFO)
@@ -153,6 +164,7 @@ watch(()=>outgoingGoodsStore.selectedOutgoingGoodsItems,
        
 
 onMounted( async ()=>{
+  outgoingGoodsStore.editing = false
   if (categoryStore.categoryItems.length < 1){
     await categoryStore.fetchCategories()
   }
@@ -170,27 +182,34 @@ onMounted( async ()=>{
 <template>
   <div>
     <div class="uk-flex uk-flex-row uk-flex-middle uk-margin-small-bottom">
-      <router-link to="/incoming-goods">
-        <!-- <button class="btn-back uk-button uk-button-small"> -->
+      <router-link to="/outgoing-goods">
+        <button class="btn-back" @click="goBack()">
           <icon-arrow-left :size="24"/>
-        <!-- </button>         -->
+        </button>        
       </router-link>
       <div class="uk-text-bold uk-margin-small-left" style="font-size: 18px;">
-        Tambah Data Barang Keluar Baru
+        {{ outgoingGoodsStore.editing ? 'Edit Data Barang Keluar':'Detail Data Barang Keluar' }}
       </div>
     </div>
-    <div class="uk-flex uk-flex-right uk-margin-small-bottom">
-      <button class="btn-cnl uk-margin-medium-right" @click="handleCancel()">Batalkan</button>
-      <button class="btn-sve" @click="handleSubmit()">Simpan</button>
+    <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small-bottom">
+      <div>
+        <div class="uk-text-danger uk-text-small" v-if="outgoingGoodsStore.errors.length > 0">*{{ outgoingGoodsStore.errors }}</div>
+      </div>
+      <div class="uk-flex uk-flex-middle">
+        <button class="btn-cnl uk-margin-medium-right" @click="cancel()" v-if="outgoingGoodsStore.editing">Batalkan</button>
+        <button class="btn-sve uk-text-capitalize" @click="outgoingGoodsStore.editOutgoingGoods()" 
+        v-if="!outgoingGoodsStore.editing" style="width: 75px;">edit</button>
+        <button class="btn-sve" @click="handleSubmit()" v-if="outgoingGoodsStore.editing">Simpan</button>
+        </div>
     </div>
     <div class="uk-flex uk-flex-between">
       <div class="uk-width-1-2"> <!--KIRI-->
         <div class="card uk-margin-small-right uk-margin-small-bottom">
-          <p style="font-weight: bold;font-size: 16px;">1. Informasi Transaksi</p>
+          <p style="font-weight: bold;font-size: 16px;">{{outgoingGoodsStore.editing ? '1. Informasi Transaksi':'Informasi Transaksi'}}</p>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Tanggal Transaksi</label>
             <div class="uk-width-1-1">
-              <VueDatePicker v-model="outgoingGoodsStore.outgoingGoodsForm.date"/>
+              <VueDatePicker v-model="outgoingGoodsStore.outgoingGoodsForm.date" :disabled="!outgoingGoodsStore.editing"/>
             </div>
           </div>   
           <!-- <div class="uk-margin-small-bottom">
@@ -199,7 +218,7 @@ onMounted( async ()=>{
           </div> -->
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <div class="label">Jenis Transaksi</div>
-            <select class="uk-form-small uk-width-1-1" v-model="outgoingGoodsStore.outgoingGoodsForm.transc_type">
+            <select class="uk-form-small uk-width-1-1 uk-text-capitalize" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.outgoingGoodsForm.transc_type">
               <option value="null" class="uk-text-italic uk-text-capitalize" disabled selected>- - Pilih Tipe Transaksi - -</option>
               <option v-for="type in transcType" 
               :value="type">
@@ -209,15 +228,15 @@ onMounted( async ()=>{
           </div>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Catatan <span class="uk-text-muted">(Opsional)</span></label>
-            <textarea type="" class="uk-textarea uk-form-small" v-model="outgoingGoodsStore.outgoingGoodsForm.note"></textarea>
+            <textarea type="" class="uk-textarea uk-form-small" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.outgoingGoodsForm.note"></textarea>
           </div> 
         </div>
         <div class="card uk-margin-small-right uk-margin-small-top"> <!--CARD KIRI BAWAH-->
-          <p style="font-weight: bold;font-size: 16px;">2. Input Barang</p>                          
+          <p style="font-weight: bold;font-size: 16px;">{{outgoingGoodsStore.editing ? '2. Input Barang':'Informasi Barang'}}</p>                          
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Nama</label>
             <div class="uk-flex uk-flex-middle">
-              <v-select :options="goodsStore.result" :filterable="false" label="name" v-model="outgoingGoodsStore.selectedOutgoingGoodsItems"
+              <v-select :options="goodsStore.result" :filterable="false" label="goods" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.selectedOutgoingGoodsItems"
                 @search="goodsStore.getSelectSearch" :loading="goodsStore.sloading" class="uk-width-1-1">
                 <template #no-options>
                   ketik untuk mencari barang..
@@ -241,10 +260,10 @@ onMounted( async ()=>{
           </div>          
           <div class="uk-flex uk-flex-column uk-margin-small-bottom uk-width-1-1">
             <div class="label">Nomor Batch</div>
-            <v-select :options="goodsStore.inStockVueSelect" :filterable="false" label="batch_number" 
-            v-model="outgoingGoodsStore.selectedOutgoingGoodsBatch" :loading="goodsStore.sloading"
+            <v-select :options="goodsStore.inStockVueSelect" :filterable="false" label="batch_number" class="uk-width-1-1" 
+            v-model="outgoingGoodsStore.selectedOutgoingGoodsBatch" :loading="batchLoading"
             :placeholder="goodsStore.inStockVueSelect.length < 1 ? 'Kosong' : '- - Pilih Batch - -'" 
-            :disabled="outgoingGoodsStore.selectedOutgoingGoodsItems === null ? true : false" class="uk-width-1-1">
+            :disabled="outgoingGoodsStore.selectedOutgoingGoodsItems === null || !outgoingGoodsStore.editing">
               <template #no-options>
                 Barang yang dipilih tidak memiliki stok yang tersedia
               </template>
@@ -264,23 +283,23 @@ onMounted( async ()=>{
           <div class="uk-grid-small uk-child-width-expand@s uk-margin-small-bottom" uk-grid>
             <div>
               <div class="label">Satuan</div>
-              <select class="uk-text-capitalize uk-form-small uk-width-1-1" v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_id">
+              <select class="uk-text-capitalize uk-form-small uk-width-1-1" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_id">
                 <option value="null" class="uk-text-italic" disabled selected>- - Pilih Satuan - -</option>
-                <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.id" class="" >
+                <option v-for="(unit, index ) in unitStore.unitsGoods" :key="unit.id" :value="unit.id" class="" >
                   {{ unit.name }}
                 </option>
               </select>
             </div> 
             <div>
               <div class="label">Jumlah</div>
-              <input type="number" class="uk-input uk-form-small" v-model="outgoingGoodsStore.selectedOutgoingGoods.qty">
+              <input type="number" class="uk-input uk-form-small" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.selectedOutgoingGoods.qty">
             </div>
           </div>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Harga Per Satuan</label>
-            <input type="number" placeholder="Rp.00,00-" class="uk-input uk-form-small uk-width-1-1" v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_price">
+            <input type="number" placeholder="Rp.00,00-" class="uk-input uk-form-small uk-width-1-1" :disabled="!outgoingGoodsStore.editing" v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_price">
           </div>          
-          <div class="uk-margin uk-flex uk-flex-between">
+          <div class="uk-margin uk-flex uk-flex-between" v-if="outgoingGoodsStore.editing">
             <button v-if="outgoingGoodsStore.isEditing" class="btn-cnl-edit"
             @click="() => {
               outgoingGoodsStore.clearCurrentItem()
@@ -299,7 +318,7 @@ onMounted( async ()=>{
         </div>
       </div>
       <div class="card uk-width-expand uk-margin-small-left" style="max-height: 600px;"> <!--KANAN-->
-        <p style="font-weight: bold;font-size: 16px;">3. Ringkasan Barang Keluar</p>        
+        <p style="font-weight: bold;font-size: 16px;">{{outgoingGoodsStore.editing ? '3. Ringkasan Barang Keluar':'Daftar Barang Keluar'}}</p>        
         <baseTable :columns="columns" :data="outgoingGoodsStore.paginatedCart" :min-rows="10" :action-col-width="'120px'" class="table">
           <template #actions="{ item }">
             <button @click="outgoingGoodsStore.editItemFromCart(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
@@ -336,10 +355,15 @@ onMounted( async ()=>{
 }
 .btn-back{
   border: none;
-  border-radius: 8px;
+  color: #1E87F0;
+  /* border-radius: 8px; */
+  background-color: transparent;
+}
+.btn-back:hover{
+  color: #0F7AE5;
 }
 .btn-cnl {
-  padding: 2px !important;
+  padding: 10px !important;
   width: 120px;
   border: none;
   border-radius: 8px;
@@ -423,6 +447,18 @@ onMounted( async ()=>{
 }
 .lyout-right{
   width: 900px;
+}
+input:disabled, select:disabled {
+  background-color: #f9f9f9 !important;
+  color: #000 !important;
+  cursor: default;
+}
+select:disabled {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: none !important;
+  background-color: #f9f9f9 !important; 
 }
 
 </style>

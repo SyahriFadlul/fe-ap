@@ -39,14 +39,56 @@ function handleCancel(){
   router.push({name:'outgoingGoods.index'})
 }
 
-function handleSubmit(){
+const transcType = ref(outgoingGoodsStore.outgoingGoodsForm.transc_type)
+const previousTranscType = ref(transcType.value)
+const selectedBatch = ref(outgoingGoodsStore.selectedOutgoingGoodsBatch)
+
+watch(transcType, async (newType) => {
+  const prev = previousTranscType.value
+  const wasFifo = outgoingGoodsStore.isFifo(prev)
+  const isNowFifo = outgoingGoodsStore.isFifo(newType)
+  const hasItems = outgoingGoodsStore.outgoingGoodsForm.items.length > 0
+
+  const changedFifoState = wasFifo !== isNowFifo
+  console.log(newType);
+  
+  if (changedFifoState && hasItems) {
+    Swal.fire({
+      title: 'Ubah ke transaksi FIFO?',
+      html: `
+        <p>Transaksi FIFO hanya mengizinkan batch dengan tanggal kedaluwarsa paling awal.</p>
+        <p><strong>Semua barang yang sudah ditambahkan akan direset.</strong></p>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ubah dan reset batch',
+      cancelButtonText: 'Batal'
+    })
+
+    .then(res => {
+      if(res.isConfirmed) {
+        outgoingGoodsStore.outgoingGoodsForm.transc_type = newType
+        previousTranscType.value = newType
+        outgoingGoodsStore.selectedOutgoingGoodsBatch = null // reset batch
+        outgoingGoodsStore.outgoingGoodsForm.items = [] //reset table
+      } else if(res.isDenied) {
+        transcType.value = previousTranscType.value
+      }
+    })
+  } else {
+    outgoingGoodsStore.outgoingGoodsForm.transc_type = newType
+    previousTranscType.value = newType
+  }
+})
+
+function handleSubmit(){ //swall validasi
   const items = outgoingGoodsStore.outgoingGoodsForm.items
   const incompleteItems = items.map((item, idx) =>(
     {...item, index:idx})
-  ).filter(item => !item.batch_number || !item.unit_id || 
+  ).filter(item => !item.batch_number || !item.unit || 
     !item.qty || !item.unit_price
   )
-  console.log(incompleteItems);
+
   const date = outgoingGoodsStore.outgoingGoodsForm.date
   const transc_type = outgoingGoodsStore.outgoingGoodsForm.transc_type
   if(date === '' || transc_type === ''){
@@ -102,6 +144,7 @@ function handleSubmit(){
           outgoingGoodsStore.clearCurrentItem()
           outgoingGoodsStore.clearCart()
           router.push({name:'outgoingGoods.index'})})
+          await goodsStore.fetchGoods()
       } catch (error) {
         const message = error.response?.data?.message || 'Terjadi kesalahan saat menyimpan transaksi. Coba lagi nanti.'  
         Swal.fire({
@@ -130,21 +173,39 @@ function clickCallback(page){
 }
 
 const columns = [
-  { key: 'name', label: 'Nama' },
+  { key: 'goods', label: 'Nama' },
   { key: 'batch_number', label: 'Nomor Batch' },
 ];
+let isFifo = ref(true)
+watch(()=>outgoingGoodsStore.outgoingGoodsForm.transc_type,
+  (type)=>{
+    if(type.toLowerCase() === 'retur' || type.toLowerCase() === 'rusak/kedaluwarsa'){
+      isFifo.value = false
+    }else{
+      isFifo.value = true
+    }
+  }
+)
 
-const transcType = ['Retur', 'Penjualan', 'Keperluan Internal', 'Lainnya']
-
-watch(()=>outgoingGoodsStore.selectedOutgoingGoodsItems,
-  async (item) => {
+const transcTypes = ['Retur', 'Penjualan', 'Keperluan Internal', 'Lainnya']
+const batchLoading = ref(false)
+watch(()=>outgoingGoodsStore.selectedOutgoingGoodsItems, //watch barang selection
+  async (item) => {    
     if(item && item.goods_id){
-      await goodsStore.fetchCurrentItemBatches(item.goods_id)
-      await unitStore.fetchGoodsUnit(item.goods_id)
+      // if(!outgoingGoodsStore.isEditing){
+        batchLoading.value = true
+        await goodsStore.fetchCurrentItemBatches(item.goods_id,isFifo.value)
+        batchLoading.value = false
+      // }
+      await unitStore.fetchGoodsUnit(item.goods_id)      
+      // if (outgoingGoodsStore.isEditing) { //reset satuan selection
+      //   outgoingGoodsStore.selectedOutgoingGoods.unit_id = 0
+      // }
+      
     }
     console.log(item);
     
-    if (item && goodsStore.inStockVueSelect.length > 0) {
+    if (item && goodsStore.inStockVueSelect.length > 0 ) {
       // Pilih batch pertama (FIFO)
       outgoingGoodsStore.selectedOutgoingGoodsBatch = goodsStore.inStockVueSelect[0]
     } else {
@@ -152,12 +213,30 @@ watch(()=>outgoingGoodsStore.selectedOutgoingGoodsItems,
     }
   }
 )
+
+watch(()=> outgoingGoodsStore.selectedOutgoingGoods.unit_id, //watch satuan selection
+async (newUnitId, oldUnitId)=>{
+  if(newUnitId === oldUnitId) return
+  if(newUnitId !== 'default' && outgoingGoodsStore.selectedOutgoingGoodsItems){
+    // await unitStore.fetchGoodsUnit(outgoingGoodsStore.selectedOutgoingGoodsItems.goods_id)
+    await unitStore.getUnitPrice(newUnitId)
+    console.log('mausk');
+    
+  }
+  
+})
        
 
 onMounted( async ()=>{
+  outgoingGoodsStore.editing = false
+  // outgoingGoodsStore.clearCart()
+  // outgoingGoodsStore.clearCurrentItem()
+  
   if (categoryStore.categoryItems.length < 1){
     await categoryStore.fetchCategories()
   }
+  console.log(unitStore.unitItems);
+  
   if (unitStore.unitItems.length < 1){
     await unitStore.fetchUnits()
   }
@@ -172,7 +251,7 @@ onMounted( async ()=>{
 <template>
   <div>
     <div class="uk-flex uk-flex-row uk-flex-middle uk-margin-small-bottom">
-      <router-link to="/incoming-goods">
+      <router-link to="/outgoing-goods">
         <!-- <button class="btn-back uk-button uk-button-small"> -->
           <icon-arrow-left :size="24"/>
         <!-- </button>         -->
@@ -201,9 +280,9 @@ onMounted( async ()=>{
           </div> -->
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <div class="label">Jenis Transaksi</div>
-            <select class="uk-form-small uk-width-1-1" v-model="outgoingGoodsStore.outgoingGoodsForm.transc_type">
+            <select class="uk-form-small uk-width-1-1" v-model="transcType">
               <option value="null" class="uk-text-italic uk-text-capitalize" disabled selected>- - Pilih Tipe Transaksi - -</option>
-              <option v-for="type in transcType" 
+              <option v-for="type in transcTypes" 
               :value="type">
                 {{ type }}
               </option>
@@ -220,7 +299,8 @@ onMounted( async ()=>{
             <label class="label">Nama</label>
             <div class="uk-flex uk-flex-middle">
               <v-select :options="goodsStore.result" :filterable="false" label="goods" v-model="outgoingGoodsStore.selectedOutgoingGoodsItems"
-                @search="goodsStore.getSelectSearch" :loading="goodsStore.sloading" class="uk-width-1-1">
+                @search="goodsStore.getSelectSearch"  class="uk-width-1-1" 
+                :disabled="outgoingGoodsStore.outgoingGoodsForm.date === null || outgoingGoodsStore.outgoingGoodsForm.transc_type === null">
                 <template #no-options>
                   ketik untuk mencari barang..
                 </template>
@@ -243,15 +323,15 @@ onMounted( async ()=>{
           </div>          
           <div class="uk-flex uk-flex-column uk-margin-small-bottom uk-width-1-1">
             <div class="label">Nomor Batch</div>
-            <v-select :options="goodsStore.inStockVueSelect" :filterable="false" label="batch_number" 
-            v-model="outgoingGoodsStore.selectedOutgoingGoodsBatch" :loading="goodsStore.sloading"
+            <v-select :options="goodsStore.inStockVueSelect" :filterable="false" label="batch_number" :resetOnOptionsChange="true"
+            v-model="outgoingGoodsStore.selectedOutgoingGoodsBatch" :loading="batchLoading"
             :placeholder="goodsStore.inStockVueSelect.length < 1 ? 'Kosong' : '- - Pilih Batch - -'" 
             :disabled="outgoingGoodsStore.selectedOutgoingGoodsItems === null ? true : false" class="uk-width-1-1">
               <template #no-options>
                 Barang yang dipilih tidak memiliki stok yang tersedia
               </template>
               <template #options="{item}">
-                <div class="uk-text-capitalize">{{ item.batch_number }}</div>
+                <div class="uk-text-capitalize">{{ item.batch_number }}t</div>-_=+
               </template>
               <template #spinner="{ loading }">
                 <div
@@ -262,12 +342,19 @@ onMounted( async ()=>{
                 </div>
               </template>              
             </v-select>
+            <span class="uk-text-italic uk-text-small" v-if="outgoingGoodsStore.selectedOutgoingGoodsBatch?.expiry_date">exp :  
+              {{  new Date(outgoingGoodsStore.selectedOutgoingGoodsBatch.expiry_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }}</span>
+
+
           </div>
           <div class="uk-grid-small uk-child-width-expand@s uk-margin-small-bottom" uk-grid>
             <div>
               <div class="label">Satuan</div>
-              <select class="uk-text-capitalize uk-form-small uk-width-1-1" v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_id">
-                <option value="null" class="uk-text-italic" disabled selected>- - Pilih Satuan - -</option>
+              <select class="uk-text-capitalize uk-form-small uk-width-1-1 select-unit"
+              v-model="outgoingGoodsStore.selectedOutgoingGoods.unit_id"
+              :disabled="outgoingGoodsStore.selectedOutgoingGoodsBatch === null ? true : false"
+              >
+                <option value="default" class="uk-text-italic" disabled selected>- - Pilih Satuan - -</option>
                 <option v-for="(unit, index ) in unitStore.unitsGoods" :key="unit.id" :value="unit.id" class="" >
                   {{ unit.name }}
                 </option>
@@ -293,8 +380,8 @@ onMounted( async ()=>{
             Batal Edit
             </button>
             <button class="btn-tocart uk-margin-auto-left" @click="handleEditOrAdd" type="button" 
-            :disabled="outgoingGoodsStore.selectedOutgoingGoodsItems === null || 
-            outgoingGoodsStore.selectedOutgoingGoodsBatch === null ? true : false">
+            :disabled="!outgoingGoodsStore.selectedOutgoingGoodsItems || batchLoading ||
+            !outgoingGoodsStore.selectedOutgoingGoodsBatch">
               {{ outgoingGoodsStore.isEditing ? 'Simpan Perubahan' : 'Tambah ke Daftar' }}
             </button>
           </div>
@@ -407,9 +494,10 @@ onMounted( async ()=>{
   gap: 24px; /* jarak antar item tengah-kiri dan tengah-kanan */
   width: 100%;
 }
-/* .qty-unit {
-  width: 150px;
-} */
+.select-unit:disabled {
+  background-color: rgb(248, 248, 248);
+  cursor: not-allowed;
+}
 .pagination {
   display: flex;
   margin: 0.25rem 0.25rem 0;

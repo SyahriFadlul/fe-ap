@@ -65,7 +65,7 @@ onMounted( async ()=>{
 	<div>        
 		<div></div>
 		<div class="uk-flex uk-flex-bottom">
-			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nomor faktur">
+			<input type="text" class="search uk-text-italic" placeholder="Cari supplier">
 			<div class="uk-margin-medium-left">
 				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
@@ -103,10 +103,6 @@ onMounted( async ()=>{
   padding: 2px 5px;
   border: 1px solid #ccc;
   border-radius: 5px;
-}
-
-.btn-fs {
-	border: none;
 }
 
 .btn-add {

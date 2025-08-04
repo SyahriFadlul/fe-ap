@@ -28,7 +28,7 @@ onMounted( async ()=>{
         <icon-arrow-left :size="24"/>
       </router-link>
       <div class="uk-text-bold uk-margin-small-left" style="font-size: 18px;">
-        Tambah Supplier Baru
+        {{ supplierStore.editing ? 'Edit Supplier' : 'Detail Supplier' }}
       </div>
     </div>
     <div class="card">

@@ -172,13 +172,16 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             this.incomingGoodsForm.invoice = invoice
             this.incomingGoodsForm.received_date = received_date
             this.incomingGoodsForm.supplier_id = supplier_id
-            this.incomingGoodsForm.items = items
+            this.incomingGoodsForm.items = items.map(item => ({
+                ...item,
+                tempId: `${Date.now()}-${Math.random().toString(36).substring(2, 5)}`
+            }))
             this.router.push({
                 name:'incomingGoods.detail',
                 params:{id:id}
             })
         },
-        async editIncomingGoods(){
+        editIncomingGoods(){
             this.editing = true
         },
         addItemToCart() {

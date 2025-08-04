@@ -147,8 +147,10 @@ export const useGoodsStore = defineStore('goods',{
             })
             .catch( err => {throw err})
         },
-        async fetchCurrentItemBatches(id){
-            await axios.get(`api/goods/${id}/batches`)
+        async fetchCurrentItemBatches(id,isFifo){
+            await axios.post(`api/goods/${id}/batches`, {
+                fifo:isFifo
+            })
             .then( res => {
                 this.currentItemBatches= res.data
                 console.log(res.data)}

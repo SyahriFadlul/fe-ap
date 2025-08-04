@@ -178,7 +178,7 @@ onMounted( async ()=>{
         </button>        
       </router-link>
       <div class="uk-text-bold uk-margin-small-left" style="font-size: 18px;">
-        {{ incomingGoodsStore.editing ? 'Ubah Data Barang Masuk':'Detail Data Barang Masuk' }}
+        {{ incomingGoodsStore.editing ? 'Edit Data Barang Masuk':'Detail Data Barang Masuk' }}
       </div>
     </div>
     <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small-bottom">
@@ -195,7 +195,7 @@ onMounted( async ()=>{
     <div class="uk-flex uk-flex-between">
       <div class="uk-width-1-2"> <!--KIRI-->
         <div class="card uk-margin-small-right uk-margin-small-bottom">
-          <p style="font-weight: bold;font-size: 16px;">1. Informasi Transaksi</p>
+          <p style="font-weight: bold;font-size: 16px;">{{incomingGoodsStore.editing ? '1. Informasi Transaksi':'Informasi Transaksi'}}</p>
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Tanggal Penerimaan</label>
             <div class="uk-width-1-1">
@@ -218,7 +218,7 @@ onMounted( async ()=>{
           </div> 
         </div>
         <div class="card uk-margin-small-right uk-margin-small-top"> <!--CARD KIRI BAWAH-->
-          <p style="font-weight: bold;font-size: 16px;">2. Input Barang</p>                          
+          <p style="font-weight: bold;font-size: 16px;">{{incomingGoodsStore.editing ? '2. Input Barang':'Informasi Barang'}}</p>                          
           <div class="uk-flex uk-flex-column uk-margin-small-bottom">
             <label class="label">Nama</label>
             <div class="uk-flex uk-flex-middle">
@@ -278,7 +278,7 @@ onMounted( async ()=>{
               <VueDatePicker v-model="incomingGoodsStore.selectedIncomingGoods.expiry_date" :disabled="!incomingGoodsStore.editing"/>
             </div>
           </div>
-          <div class="uk-margin uk-flex uk-flex-between">
+          <div class="uk-margin uk-flex uk-flex-between" v-if="incomingGoodsStore.editing">
             <button v-if="incomingGoodsStore.isEditing" class="btn-cnl-edit"
             @click="() => {
               incomingGoodsStore.clearCurrentItem()
@@ -297,7 +297,7 @@ onMounted( async ()=>{
         </div>
       </div>
       <div class="card uk-width-expand uk-margin-small-left" style="max-height: 600px;"> <!--KANAN-->
-        <p style="font-weight: bold;font-size: 16px;">3. Ringkasan Barang Masuk</p>        
+        <p style="font-weight: bold;font-size: 16px;">{{incomingGoodsStore.editing ? '3. Ringkasan Barang Masuk':'Daftar Barang Masuk'}}</p>        
         <baseTable :columns="columns" :data="incomingGoodsStore.paginatedCart" :min-rows="10" :action-col-width="'120px'" class="table">
           <template #actions="{ item }">
             <button @click="incomingGoodsStore.editItemFromCart(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
@@ -437,10 +437,8 @@ select:disabled {
   -webkit-appearance: none;
   -moz-appearance: none;
   background-image: none !important;
-  background-color: #f9f9f9; /* opsional, biar beda dengan enabled */
+  background-color: #f9f9f9; 
 }
 
-.vs__search::placeholder {
-  font-style: italic;
-}
+
 </style>

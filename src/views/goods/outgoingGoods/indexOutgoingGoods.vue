@@ -2,9 +2,47 @@
 import { useOutgoingGoodsStore } from '@/stores/outgoingGoods';
 import { onMounted, ref } from 'vue';
 import baseTable from '@/components/baseTable.vue';
-import { IconFilter, IconSortAscending, IconPlus, IconEdit, IconTrash } from '@tabler/icons-vue';
+import { IconFilter, IconSortAscending, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue';
+import Swal from 'sweetalert2';
 
 const outgoingGoodsStore = useOutgoingGoodsStore()
+
+function deleteOutgoingGoods(item){
+  Swal.fire({
+    title: 'Yakin ingin menghapus transaksi?',
+    text: `Invoice: ${item.invoice}`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await outgoingGoodsStore.deleteOutgoingGoods(item.id)
+        Swal.fire({
+          title: 'Dihapus!',
+          text: 'Barang berhasil dihapus.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+		const page = 1
+		router.push({
+			name:'outgoingGoods.index',
+			query:{...route.query, page}
+		})        
+      } catch (error) {
+        console.log(error);
+        
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus.',
+          icon: 'error',
+        })
+      }
+    }
+  })
+}
 
 const columns = [
   { key: 'date', label: 'Tanggal Keluar' },
@@ -39,8 +77,8 @@ onMounted( async () => {
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
 			<baseTable :columns="columns" :data="outgoingGoodsStore.outgoingGoodsItemList" class="table">
 				<template #actions="{ item }">
-					<button @click="edit(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-					<button @click="remove(item)" class="btn-del"><IconTrash :size="18"/></button>
+					<button @click="outgoingGoodsStore.showDetails(item)" class="uk-margin-small-right btn-edit"><IconEye :size="18"/></button>
+					<button @click="deleteOutgoingGoods(item)" class="btn-del"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>
@@ -53,10 +91,6 @@ onMounted( async () => {
   padding: 2px 5px;
   border: 1px solid #ccc;
   border-radius: 5px;
-}
-
-.btn-fs {
-	border: none;
 }
 
 .btn-add {

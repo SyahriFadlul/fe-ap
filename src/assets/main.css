@@ -42,6 +42,32 @@
   justify-self: end;
   margin-top: 5px;
 }
+.btn-add{
+  padding: 10px 5px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  background-color: #1E87F0;
+}
+
+.btn-add:hover{
+  background-color: #0F7AE5 !important;
+}
+
+.btn-fs {
+	border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #5f27cd;
+  background-color: #f0f0f5 !important;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* sedikit timbul */
+}
+
+.btn-fs:hover {
+  background-color: #d6c4ee !important; /* ungu muda */
+  border-color: #b89bdd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* efek timbul lebih kuat */
+}
 
 .btn-edit {
   background-color: #00A9FF;
@@ -60,12 +86,12 @@
 }
 input, textarea, select {
   border: 1px solid #e5e5e5;
+  color: rgb(36, 36, 36) !important;
 }
 
 input:focus, textarea:focus, select:focus {
   border: 1px solid #1e87f0;
-  outline: none;             /* Hilangkan garis putus-putus dari browser */
-  
+  outline: none;             /* del garis putus-putus */
   transition: .2s ease-in-out;
 }
 

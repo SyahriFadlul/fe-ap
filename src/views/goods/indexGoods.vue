@@ -53,7 +53,7 @@ const option = ref({
         borderWidth: 2
       },
       label: {
-        show: false,
+        show: true,
         position: 'center'
       },
       emphasis: {

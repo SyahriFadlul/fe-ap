@@ -1,7 +1,7 @@
 <script setup>
 import { useGoodsStore } from '@/stores/goods';
 import { onMounted, ref, provide } from 'vue';
-import { IconBox } from '@tabler/icons-vue'
+import { IconBox, IconPackageImport, IconPackageExport, IconHourglassLow } from '@tabler/icons-vue'
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { PieChart, BarChart } from "echarts/charts";
@@ -37,7 +37,7 @@ use([
 
 const option = ref({
   title: {
-    text: "Traffic Sources",
+    text: "Analisis Supplier Barang Masuk",
     left: "center"
   },
   tooltip: {
@@ -47,20 +47,19 @@ const option = ref({
   legend: {
     orient: "vertical",
     left: "left",
-    data: ["Direct", "Email", "Ad Networks", "Video Ads", "Search Engines"]
+    top:40,
+    data: ["PT. Combi Putra", "PT. Nara Artha", "Kudamas"]
   },
   series: [
     {
-      name: "Traffic Sources",
+      name: "Barang Masuk",
       type: "pie",
       radius: "55%",
       center: ["50%", "60%"],
       data: [
-        { value: 335, name: "Direct" },
-        { value: 310, name: "Email" },
-        { value: 234, name: "Ad Networks" },
-        { value: 135, name: "Video Ads" },
-        { value: 1548, name: "Search Engines" }
+        { value: 335, name: "PT. Combi Putra" },
+        { value: 310, name: "PT. Nara Artha" },
+        { value: 234, name: "Kudamas"},
       ],
       emphasis: {
         itemStyle: {
@@ -75,14 +74,15 @@ const option = ref({
 
 const option2 = {
   title: {
-    text: 'Rainfall vs Evaporation',
-    subtext: 'Fake Data'
+    text: 'Analisis Barang Masuk vs Barang Keluar',
+    left:'center'
   },
   tooltip: {
     trigger: 'axis'
   },
   legend: {
-    data: ['Rainfall', 'Evaporation']
+    data: ['Barang Masuk', 'Barang Keluar'],
+    bottom: 1,
   },
   toolbox: {
     show: true,
@@ -108,10 +108,10 @@ const option2 = {
   ],
   series: [
     {
-      name: 'Rainfall',
+      name: 'Barang Masuk',
       type: 'bar',
       data: [
-        2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3
+        2, 4, 7, 23, 25, 76, 135, 162, 32, 20, 6, 3
       ],
       markPoint: {
         data: [
@@ -124,15 +124,15 @@ const option2 = {
       }
     },
     {
-      name: 'Evaporation',
+      name: 'Barang Keluar',
       type: 'bar',
       data: [
-        2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3
+        2, 5, 9, 26, 28, 70, 175, 182, 48, 18, 6, 2
       ],
       markPoint: {
         data: [
-          { name: 'Max', value: 182.2, xAxis: 7, yAxis: 183 },
-          { name: 'Min', value: 2.3, xAxis: 11, yAxis: 3 }
+          { name: 'Max', value: 182, xAxis: 7, yAxis: 183 },
+          { name: 'Min', value: 2, xAxis: 11, yAxis: 3 }
         ]
       },
       markLine: {
@@ -153,44 +153,47 @@ onMounted( async () => {
       <div class="info-card">
         <div class="info-ttl">Total stok</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="5000" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="1300" :duration="1000" separator="" /></div>
           <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
+        <span class="info-desc">strip/blister/tube</span>
       </div>                
       <div class="info-card">
         <div class="info-ttl">Barang masuk</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="5000" :duration="1000" separator="" /></div>
-          <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
+          <div class="info-num"><CountTo :endVal="150" :duration="1000" separator="" /></div>
+          <IconPackageImport :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
         <div>
           <span class="info-desc">vs bulan lalu</span>
-          <span class="info-desc"> num</span>
+          <span class="info-desc" style="color: #27ae60;font-weight: 500;"> +10%</span>
         </div>
       </div>                
       <div class="info-card">
         <div class="info-ttl">Barang keluar</div>
         <div class="uk-flex uk-flex-between uk-text-center">
-          <div class="info-num"><CountTo :endVal="5000" :duration="1000" separator="" /></div>
-          <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
+          <div class="info-num"><CountTo :endVal="80" :duration="1000" separator="" /></div>
+          <IconPackageExport :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
         <span class="info-desc">vs bulan lalu</span>
+        <span class="info-desc" style="color: #e74c3c;font-weight: 500;"> -10%</span>
       </div>                
       <div class="info-card">
-        <div class="info-ttl">Total barang</div>
+        <div class="info-ttl">Barang Mendekati Kedaluwarsa</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="5000" :duration="1000" separator="" /></div>
-          <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
+          <div class="info-num"><CountTo :endVal="0" :duration="1000" separator="" /></div>
+          <IconHourglassLow :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
+        <span class="info-desc">dalam 30 hari kedepan</span>
       </div>                
     </div>
-    <div class="uk-child-1-2" style="height: 500px;" uk-grid>
-      <div class="uk-width-1-2" style="height: 500px;">
-        <v-chart class="chart" :option="option2" />
-      </div>
-      <div class="uk-width-1-2" style="height: 500px;">
-        <v-chart class="chart" :option="option" />  
-      </div>
+    <div class="uk-flex uk-margin-medium-top uk-flex-between">
+        <div class="card uk-margin-small-right">
+          <v-chart class="chart" :option="option2"/>
+        </div>
+        <div class="card uk-margin-small-left" style="">
+          <v-chart class="chart" :option="option" />  
+        </div>
     </div>
     <div class="uk-child-1-2" style="height: 500px;" uk-grid>
       <div class="uk-width-1-2" style="height: 500px;">
@@ -250,6 +253,21 @@ onMounted( async () => {
 .body-info {
   display: flex;
   align-items: baseline;
+}
+
+.card {
+  border-radius: 15px;
+  padding: 10px;
+  width: 50%;
+  height: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart {
+  width: 100%;
+  height: 100%; /* atau sesuaikan tinggi ideal */
 }
 
 .note-info {
