@@ -155,29 +155,6 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
             
             this.clearCurrentItem()
         },
-        detailEditItemFromCart(item) { //item = outgoinggoodsform, halaman create
-            this.editing = false
-            const unitStore = useUnitStore()
-            const unitId = this.selectedOutgoingGoods.unit_id
-
-            const tempId = `${Date.now()} - ${Math.random().toString(36).substring(2,5)}`
-            
-            console.log(item);
-            const{goods_id, goods, batch_id, batch_number} = item            
-            this.selectedOutgoingGoodsItems = {goods_id, goods}
-            this.selectedOutgoingGoodsBatch = {batch_id, batch_number}
-            this.selectedOutgoingGoods = {
-                qty: item.qty,
-                unit_id: item.unit_id,
-                unit: item.unit,
-                unit_price: item.unit_price,
-                tempId: tempId
-            }
-            console.log(this.selectedOutgoingGoods);
-            
-            
-            this.editingTempId = tempId
-        },
         editItemFromCart(item) { //item = outgoinggoodsform, halaman detail/edit
             this.editing = false
             const unitStore = useUnitStore()

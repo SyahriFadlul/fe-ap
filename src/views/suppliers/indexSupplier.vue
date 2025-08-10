@@ -10,8 +10,10 @@ import Swal from 'sweetalert2';
 const supplierStore = useSupplierStore()
 
 const columns = [
-  { key: 'name', label: 'Nama Perusahaan' },
-  { key: 'contact', label: 'Kontak' },
+  { key: 'company_name', label: 'Nama Instansi' },
+  { key: 'company_phone', label: 'Telepon Instansi' },
+  { key: 'contact_person_name', label: 'Kontak Person' },
+  { key: 'contact_person_phone', label: 'Telepon Kontak Person' },
   { key: 'note', label: 'Catatan' },
 ];
 

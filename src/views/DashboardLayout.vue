@@ -19,11 +19,10 @@ const categoryStore = useCategoryStore()
 const supplierStore = useSupplierStore()
 const incomingGoodsStore = useIncomingGoodsStore()
 const outgoingGoodsStore = useOutgoingGoodsStore()
+const settingStore = useSettingStore()
 const userStore = useUserStore()
 const route = useRoute()
 const page = ref('')
-
-const settingStore = useSettingStore()
 
 async function refresh(page){
   if(page.toLowerCase() === 'dashboard'){
@@ -46,7 +45,7 @@ async function refresh(page){
     await outgoingGoodsStore.fetchOutgoingGoods()
   }
   if(page.toLowerCase() === 'manajemen user'){
-    await userStore.getUsers()
+    await userStore.fetchUsers()
   }
   
 }
@@ -56,8 +55,10 @@ watch(() => route.fullPath,
     page.value = route.meta.title    
   }
 )
-onMounted( () => {
+onMounted( async () => {
   page.value = route.meta.title
+  // await settingStore.requestNotificationPermission()
+  // settingStore.sendNotification()
 })
 </script>
 <template>

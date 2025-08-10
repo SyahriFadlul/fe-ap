@@ -3,7 +3,7 @@ import { useGoodsStore } from '@/stores/goods'
 import { onMounted, ref, watch } from 'vue'
 import baseTable from '../../components/baseTable.vue'
 import Paginate from 'vuejs-paginate-next';
-import { IconDownload, IconBox, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue'
+import {  IconSortAscending, IconFilter, IconBox, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart } from 'echarts/charts'
@@ -168,6 +168,10 @@ onMounted( async ()=>{
       <div class="">
         <input type="text" class="search uk-text-italic" placeholder="Cari barang..." v-model="goodsStore.searchQuery">
       </div>
+      <div class="uk-margin-medium-left">
+				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
+				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+			</div>
       <div class="uk-margin-auto-left">
         <RouterLink :to="{name: 'goods.create'}">
           <button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang</button>
@@ -237,7 +241,7 @@ onMounted( async ()=>{
 
 .chart {
   width: 100%;
-  height: 50%; /* atau sesuaikan tinggi ideal */
+  height: 50%; 
 }
 
 .info-num {
@@ -271,8 +275,19 @@ onMounted( async ()=>{
   margin-bottom: 10px;
 }
 
-button {
-  border: none;
+.btn-fs {
+	border: 1px solid #ccc;
+  border-radius: 5px;
+  color: #5f27cd;
+  background-color: #f0f0f5 !important;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-fs:hover {
+  background-color: #d6c4ee !important;
+  border-color: #b89bdd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 

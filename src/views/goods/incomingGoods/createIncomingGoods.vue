@@ -1,6 +1,6 @@
 <script setup>
 import { useGoodsStore } from '@/stores/goods'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import { IconArrowLeft, IconCirclePlus, IconEdit, IconTrash, IconChevronsRight } from '@tabler/icons-vue'
 import { useCategoryStore } from '@/stores/category'
@@ -147,7 +147,15 @@ const columns = [
   { key: 'goods', label: 'Nama' },
   { key: 'batch_number', label: 'Nomor Batch' },
 ];
-       
+
+watch(() => incomingGoodsStore.selectedIncomingGoodsItems,
+  async (newItem) => {
+    if(item && item.goods_id){
+      await goodsStore.fetchCurrentItemBatches(newItem.goods_id)
+      
+      await unitStore.fetchGoodsUnit(newItem.goods_id)                  
+    }
+});
 
 onMounted( async ()=>{
   if (categoryStore.categoryItems.length < 1){
@@ -211,7 +219,8 @@ onMounted( async ()=>{
             <label class="label">Nama</label>
             <div class="uk-flex uk-flex-middle">
               <v-select :options="goodsStore.result" :filterable="false" label="goods" v-model="incomingGoodsStore.selectedIncomingGoodsItems"
-                @search="goodsStore.getSelectSearch" :loading="goodsStore.sloading" class="uk-width-1-1">
+              placeholder="ketik untuk mencari barang"
+              @search="goodsStore.getSelectSearch" :loading="goodsStore.sloading" class="uk-width-1-1">
                 <template #no-options>
                   ketik untuk mencari barang..
                 </template>
@@ -241,7 +250,7 @@ onMounted( async ()=>{
               <div class="label">Satuan</div>
               <select class="uk-text-capitalize uk-form-small uk-width-1-1" v-model="incomingGoodsStore.selectedIncomingGoods.unit_id">
                 <option value="null" class="uk-text-italic" disabled selected>- - Pilih Satuan - -</option>
-                <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.id" class="" >
+                <option v-for="(unit, index ) in unitStore.unitsGoods" :key="unit.id" :value="unit.id" class="" >
                   {{ unit.name }}
                 </option>
               </select>

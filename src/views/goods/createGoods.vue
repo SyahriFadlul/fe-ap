@@ -1,10 +1,11 @@
 <script setup>
 import { useGoodsStore } from '@/stores/goods'
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, watch } from 'vue'
 import { IconArrowLeft } from '@tabler/icons-vue'
 import { useCategoryStore } from '@/stores/category'
 import { useUnitStore } from '@/stores/unit'
 import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 
 const goodsStore = useGoodsStore()
 const categoryStore = useCategoryStore()
@@ -23,8 +24,31 @@ const data = ref({
 })
 
 async function cancel(){
-  router.go(-1)
+  if (Object.values(data.value).every(value => value === '' || value == null)) { //cek data kosong atw tdk
+    console.log(data.value);    
+  }
+  else{
+    Swal.fire({
+      title: 'Yakin ingin meninggalka?',
+      text: `Barang: ${item.name}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, hapus!',
+      cancelButtonText: 'Batal',
+    })
+  }
+  
+  // router.go(-1)
 }
+
+watch(data,(newVal)=>{
+  if(Object.values(newVal).every(value => value === '' || value == null)){ //cek data kosong atw tdk
+    console.log(newVal);
+    goodsStore.hasUnsavedChanges = false
+  }else{
+    goodsStore.hasUnsavedChanges = true
+  }
+}, { deep: true })
 
 onMounted( async ()=>{
   goodsStore.errors = []
@@ -122,7 +146,7 @@ onMounted( async ()=>{
       </div>
       <div class="uk-flex uk-flex-row uk-flex-right uk-margin-medium-top">
         <button class="btn-cnl uk-margin-medium-right" @click="cancel()">Batalkan</button>
-        <button class="btn-sve" @click="goodsStore.createGoods(data)">Simpan</button>
+        <button class="btn-sve" @click="goodsStore.createGoods(data)" :disabled="goodsStore.isSubmitting">Simpan</button>
       </div>
     </div>
   </div>
@@ -157,6 +181,11 @@ onMounted( async ()=>{
 }
 .btn-sve:hover{
   background-color: #0F7AE5;
+
+}
+.btn-sve:disabled{
+  background-color: #B0C4DE;
+  cursor: progress;
 }
 
 .label{

@@ -1,29 +1,37 @@
 <script setup>
-import { useGoodsStore } from '@/stores/goods'
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, watch } from 'vue'
 import { IconArrowLeft } from '@tabler/icons-vue'
-import { useCategoryStore } from '@/stores/category'
-import { useUnitStore } from '@/stores/unit'
+import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
 
-const goodsStore = useGoodsStore()
-const categoryStore = useCategoryStore()
-const unitStore = useUnitStore()
+
+const userStore = useUserStore()
+const router = useRouter()
 
 function cancel(){
   router.go(-1)
 }
 
-onMounted( async ()=>{
-  await categoryStore.fetchCategories()
-  await unitStore.fetchUnits()
+const togglePassword = ref(false)
 
-    
+const data = ref({
+  username: '',
+  password: '',
+  role: '',
+})
+
+watch(()=> data.value.role,(newVal)=>{
+  if(newVal === '')data.value.role = ''
+})
+
+onMounted( async ()=>{
+  data.value.role = 'kosong'
 })
 </script>
 <template>
   <div>
     <div class="uk-flex uk-flex-row uk-flex-middle uk-margin-small-bottom">
-      <router-link to="/goods">
+      <router-link to="/users">
         <button class="btn-back uk-button uk-button-small">
           <icon-arrow-left :size="24"/>
         </button>        
@@ -32,75 +40,32 @@ onMounted( async ()=>{
         Tambah User Baru
       </div>
     </div>
-    <div class="card">
-      <p style="font-weight: bold;font-size: 16px;">Informasi Dasar</p>
+    <div class="card uk-flex uk-flex-middle">      
       <div class="uk-flex uk-flex-column uk-width-3-5 uk-margin-small-bottom">
-        <label class="label">Nama</label>
-        <input type="text" class="uk-input uk-form-small">
-      </div>
-      <div class="uk-flex uk-flex-column uk-margin-small-bottom">
-        <div class="label">Kategori</div>
-        <select class=" uk-width-1-2 uk-form-small">
-          Pilih Kategori
-          <option value="null" class="uk-text-italic uk-text-capitalize" disabled>Pilih Kategori</option>
-          <option v-for="(category, index ) in categoryStore.categoryItems" :key="category.id" :value="category.name">
-            {{ category.name }}
-          </option>
-        </select>     
-      </div>
-      <p style="font-weight: bold;font-size: 16px;">Inventori</p>
-      <div class="uk-flex uk-flex-between uk-width-3-5">
-        <div class="uk-flex uk-flex-column unit-wrapper">
-          <label class="label">Satuan Terkecil</label>
-          <select class="uk-text-capitalize uk-width-1-2 uk-form-small">
-            Pilih Satuan Terkecil
-            <option value="null" class="uk-text-italic" disabled>Pilih Satuan</option>
-            <option value="null">-- Pilih --</option>
-            <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.name" class="" >
-              {{ unit.name }}
-            </option>
-          </select> 
-        </div>
-        <div class="uk-flex uk-flex-column unit-wrapper">
-          <label class="label">Satuan Menengah <span style="color: darkgrey;">(Opsional)</span></label>
-          <select class="uk-text-capitalize uk-width-1-2 uk-form-small">
-            Pilih Satuan
-            <option value="null" class="uk-text-italic" disabled>Pilih Satuan</option>
-            <option value="null">-- Pilih --</option>
-            <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.name" class="" >
-              {{ unit.name }}
-            </option>
-          </select>
-        </div>
-        <div class="uk-flex uk-flex-column unit-wrapper">
-          <label class="label" style="margin-left: 58px;">Satuan Terbesar</label>
-          <select class="uk-text-capitalize uk-margin-auto-left uk-width-1-2 uk-form-small">
-            Pilih Satuan
-            <option value="null" class="uk-text-italic" disabled>Pilih Satuan</option>
-            <option value="null">-- Pilih --</option>
-            <option v-for="(unit, index ) in unitStore.unitItems" :key="unit.id" :value="unit.name" class="" >
-              {{ unit.name }}
-            </option>
-          </select>
-        </div>
-      </div>
-      <div class="uk-flex uk-margin-small-top">
-        <div class="uk-flex uk-flex-column">
-          <label class="label">Isi Per Menengah</label>
-          <input type="text" class="uk-input uk-form-small">
-        </div>
-        <div class="uk-flex uk-flex-column uk-margin-xlarge-left">
-          <label class="label">Isi Per Terbesar</label>
-          <input type="text" class="uk-input uk-form-small">
+        <label class="label">Username</label>
+        <input type="text" class="uk-input uk-form-small" v-model="data.username" placeholder="Masukkan nama pengguna">
+      </div>  
+      <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5">
+        <div class="label">Password</div>
+        <div class="uk-inline">
+          <input :type="togglePassword ? 'text' : 'password'" class="uk-input uk-form-small" 
+          v-model="data.password" placeholder="Masukkan password">
+          <button class="uk-form-icon uk-form-icon-flip toggle-password" type="button"
+          @click="()=>togglePassword = !togglePassword" :class="{'uk-active': togglePassword}"
+          :uk-icon="togglePassword ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
         </div>
       </div>
       <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5">
-        <label class="label">Rak Penyimpanan</label>
-        <input type="text" class="uk-input uk-form-small">
-      </div>
+        <div class="label">Role</div>
+        <select class="uk-form-small om uk-width-1-1" v-model="data.role" placeholder="- - Pilih Role - -">
+          <option value="kosong" class="" disabled selected>- - Pilih Role - -</option>
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
+        </select>     
+      </div>      
       <div class="uk-flex uk-flex-row uk-flex-right uk-margin-medium-top">
-        <button class="btn-cnl uk-margin-medium-right">Batalkan</button>
-        <button class="btn-sve">Simpan</button>
+        <button class="btn-cnl uk-margin-medium-right" @click="()=>router.go(-1)">Batalkan</button>
+        <button class="btn-sve" @click="userStore.createUser(data)">Simpan</button>
       </div>
     </div>
   </div>
@@ -108,8 +73,10 @@ onMounted( async ()=>{
 <style scoped>
 .card {
   padding: 20px;
+  padding-top: 100px;
   border: 1px solid #eee;
   border-radius: 8px;
+  height: 500px;
 }
 
 .btn-back{
@@ -117,31 +84,43 @@ onMounted( async ()=>{
   border-radius: 8px;
 }
 
-.btn-cnl {
-  padding: 10px 5px;
-  width: 130px;
+.btn-cnl{
+  width: 150px;
   border: none;
   border-radius: 8px;
+  padding: 10px;
+  background-color: #E5E5E5;
 }
-
-.btn-sve {
-  padding: 10px 5px;
-  width: 130px;
+.btn-cnl:hover{
+  background-color: #D5D5D5;
+}
+.btn-sve{
+  width: 150px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
-  color: rgb(2, 29, 16);
-  background-color: #58F566;
+  color: white;
+  background-color: #1E87F0; /*1E87F0  0F7AE5*/
+}
+.btn-sve:hover{
+  background-color: #0F7AE5;
 }
 
 .label{
   font-size: 15px;
-}
-
-.unit-wrapper {
-  width: 207.78px
+  color: black;
+  font-weight: 500;
 }
 
 select {
-  width: 150px;
+  box-sizing: border-box;
+  height: 30px !important;
+  /* line-height: 40px; */
+  padding: 0 10px;
+}
+
+
+.toggle-password:hover {
+  color: #000;
 }
 </style>

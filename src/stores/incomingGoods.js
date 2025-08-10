@@ -28,6 +28,7 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             qty: 1,
             conversion_qty: 1,
             unit_id: null,
+            unit: [],
             unit_price: null,
             expiry_date: null,
         },
@@ -166,8 +167,8 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         showDetails(item){
             this.clearCart()
             this.clearCurrentItem()
-            const {invoice, items, received_date, supplier_id, id} = item
             console.log(item);
+            const {invoice, items, received_date, supplier_id, id} = item
             this.incomingGoodsForm.id = id
             this.incomingGoodsForm.invoice = invoice
             this.incomingGoodsForm.received_date = received_date

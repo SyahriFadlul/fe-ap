@@ -4,6 +4,8 @@ import { onMounted, ref } from 'vue';
 import baseTable from '@/components/baseTable.vue';
 import { IconFilter, IconSortAscending, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue';
 import Swal from 'sweetalert2';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import Paginate from 'vuejs-paginate-next';
 
 const outgoingGoodsStore = useOutgoingGoodsStore()
 
@@ -44,6 +46,15 @@ function deleteOutgoingGoods(item){
   })
 }
 
+const sortDate = ref({
+  startDate: new Date(),
+  endDate: new Date(),
+});
+
+function applyFilter(){
+  
+}
+
 const columns = [
   { key: 'date', label: 'Tanggal Keluar' },
   { key: 'invoice', label: 'Nomor Faktur' },
@@ -61,14 +72,32 @@ onMounted( async () => {
 </script>
 <template>
 	<div>        
-		<div></div>
 		<div class="uk-flex uk-flex-bottom">
 			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nomor faktur">
 			<div class="uk-margin-medium-left">
-				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
-				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
-			</div>
-			<div class="uk-margin-auto-left">
+        <div class="uk-inline">
+          <button class="btn-fs uk-margin-small-right" type="button"><icon-filter :size="18"/></button>
+          <div class="uk-width-large" uk-dropdown="mode: click;">
+            <div class="uk-flex uk-flex-between">
+              <div class="uk-flex uk-flex-column">
+                <div>Tanggal Awal</div>
+                <VueDatePicker placeholder="Pilih tanggal awal" v-model="sortDate.startDate"/>
+              </div>
+              <div class="uk-flex uk-flex-column">
+                <div>Tanggal Akhir:</div>
+                <VueDatePicker placeholder="Pilih tanggal akhir" v-model="sortDate.endDate"/>
+              </div>
+            </div>
+            <div class="uk-margin-top">
+              <button class="btn-add" @click="applyFilter">Terapkan</button>
+            </div>
+        </div>
+      </div>
+        <button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+      </div>    
+      <div class="uk-margin-auto-left uk-flex uk-flex-row uk-flex-middle">
+        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke PDF</button>
+        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke Excel(XLS)</button>
 				<RouterLink :to="{name: 'outgoingGoods.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Keluar</button>
 				</RouterLink>
@@ -82,6 +111,17 @@ onMounted( async () => {
 				</template>
 			</baseTable>
 		</div>
+    <paginate
+    v-model="outgoingGoodsStore.pagination.currentPage"
+    :page-count="outgoingGoodsStore.pagination.totalPage"
+    :page-range="3"
+    :margin-pages="3"
+    :click-handler="clickCallback"
+    :prev-text="'Sebelumnya'"
+    :next-text="'Selanjutnya'"
+    :container-class="'pagination'"
+    :page-class="'page-item'"
+    />
 	</div>
 </template>
 <style  scoped>

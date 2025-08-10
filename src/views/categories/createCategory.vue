@@ -18,6 +18,15 @@ function cancel(){
   router.go(-1)
 }
 
+watch(data,(newVal)=>{
+  if(Object.values(newVal).every(value => value === '' || value == null)){ //cek data kosong atw tdk
+    console.log(newVal);
+    categoryStore.hasUnsavedChanges = false
+  }else{
+    categoryStore.hasUnsavedChanges = true
+  }
+}, { deep: true })
+
 onMounted( async ()=>{
   categoryStore.errors = []
   if (categoryStore.categoryItems.length < 1){

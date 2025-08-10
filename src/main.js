@@ -7,6 +7,7 @@ import App from './App.vue'
 import router from './router'
 import './axios'
 import { useRoute, useRouter } from 'vue-router'
+import './echo.js'
 
 
 import UIkit from 'uikit';

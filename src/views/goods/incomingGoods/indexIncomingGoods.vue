@@ -6,8 +6,7 @@ import { IconFilter, IconSortAscending, IconPlus, IconEye, IconTrash } from '@ta
 import Paginate from 'vuejs-paginate-next';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import OffCanvasDetail from '@/components/OffCanvasDetail.vue';
-import UIkit from 'uikit';
+import VueDatePicker from '@vuepic/vue-datepicker';
 
 const incomingGoodsStore = useIncomingGoodsStore()
 const route = useRoute()
@@ -69,8 +68,27 @@ function deleteIncomingGoods(item){
     }
   })
 }
-const openCanvas = () => {
-  UIkit.offcanvas('#detailCanvas').show()
+
+const sortDate = ref({
+  startDate: new Date(),
+  endDate: new Date(),
+})
+
+const showDropdown = ref(false)
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+
+// Tutup dropdown kalau klik di luar
+const handleClickOutside = (e) => {
+  if (!e.target.closest(".uk-inline")) {
+    showDropdown.value = false;
+  }
+};
+
+function applyFilter(){
+  
 }
 
 const rows = [
@@ -116,21 +134,41 @@ onMounted( async () => {
 </script>
 <template>
 	<div>        
-		<div></div>
 		<div class="uk-flex uk-flex-bottom">
 			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nomor faktur">
 			<div class="uk-margin-medium-left">
-				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
-				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
-			</div>
-			<div class="uk-margin-auto-left">
-				<RouterLink :to="{name: 'incomingGoods.create'}">
-					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Masuk</button>
-				</RouterLink>
-			</div>
-		</div>
+        <div class="uk-inline">
+          <button class="btn-fs uk-margin-small-right" type="button"><icon-filter :size="18"/></button>
+          <div class="uk-width-large" uk-dropdown="mode: click;">
+            <div class="uk-flex uk-flex-between">
+              <div class="uk-flex uk-flex-column">
+                <div>Tanggal Awal</div>
+                <VueDatePicker placeholder="Pilih tanggal awal" v-model="sortDate.startDate"/>
+              </div>
+              <div class="uk-flex uk-flex-column">
+                <div>Tanggal Akhir:</div>
+                <VueDatePicker placeholder="Pilih tanggal akhir" v-model="sortDate.endDate"/>
+              </div>
+            </div>
+            <div class="uk-margin-top">
+              <button class="btn-add" @click="applyFilter">Terapkan</button>
+            </div>
+        </div>
+      </div>
+        <button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+      </div>      
+      <div class="uk-margin-auto-left uk-flex uk-flex-row uk-flex-middle">
+        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke PDF</button>
+        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke Excel(XLS)</button>
+        <RouterLink :to="{name: 'incomingGoods.create'}">
+          <button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Masuk</button>
+        </RouterLink>
+      </div>
+    </div>
+    
+      
 		<div class="uk-flex uk-overflow-auto uk-margin-small-top">
-			<baseTable :columns="columns" :data="incomingGoodsStore.incomingGoodsItemList" class="table" @row-click="incomingGoodsStore.showDetails">
+			<baseTable :columns="columns" :data="incomingGoodsStore.incomingGoodsItemList" class="table">
 				<template #amount="{item}">
 					<span>Rp.{{ rupiahNum(item.amount) }}</span>
 				</template>

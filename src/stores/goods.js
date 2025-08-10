@@ -31,6 +31,8 @@ export const useGoodsStore = defineStore('goods',{
             lastPage: 1,
         },
         editing: false, //buat halaman detail barang
+        isSubmitting: false,
+        hasUnsavedChanges: false,
     }),
     getters:{
         goodsItems: (state) => state.goodsList,
@@ -64,7 +66,7 @@ export const useGoodsStore = defineStore('goods',{
     actions:{
         async fetchGoods(page = 1){
             this.categoryDistribution = []
-            this.goodsList = []
+            this.goodsList = []                        
             
             axios.get(`api/goods?page=${page}`)
             .then( res => {
@@ -80,9 +82,11 @@ export const useGoodsStore = defineStore('goods',{
             })
             .catch( err => console.log(err)
             )
+            
         },
         async createGoods(data){
             this.errors = []
+            this.isSubmitting = true
             await axios.post('api/goods', {
                 name: data.name,
                 category_id: data.category_id,
@@ -111,6 +115,7 @@ export const useGoodsStore = defineStore('goods',{
                 console.log(err.message);
                 
             })
+            .finally(() => this.isSubmitting = false)
         },
         async detailGoods(data){
             this.selectedGoods = data
@@ -127,6 +132,7 @@ export const useGoodsStore = defineStore('goods',{
             this.editing = true
         },
         async updateGoods(data){
+            this.isSubmitting = true
             await axios.put(`api/goods/${this.selectedGoods.id}`, data)
             .then(async res => {
                 await this.fetchGoods()
@@ -134,8 +140,10 @@ export const useGoodsStore = defineStore('goods',{
                 
             })
             .catch( err => {throw err})
+            .finally(() => this.isSubmitting = false)
         },
         async deleteGoods(id){
+            this.isSubmitting = true
             await axios.delete(`api/goods/${id}`)
             .then( res => {
                 const page = 1
@@ -146,6 +154,7 @@ export const useGoodsStore = defineStore('goods',{
                 
             })
             .catch( err => {throw err})
+            .finally(() => this.isSubmitting = false)
         },
         async fetchCurrentItemBatches(id,isFifo){
             await axios.post(`api/goods/${id}/batches`, {

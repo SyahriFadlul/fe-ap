@@ -44,7 +44,8 @@ const router = createRouter({
           name: 'goods.create',
           component: () => import('@/views/goods/createGoods.vue'),
           meta:{
-            title: 'inventori'
+            title: 'inventori',
+            checkUnsavedChanges: true
           },
         },
         {
@@ -68,7 +69,8 @@ const router = createRouter({
           name: 'incomingGoods.create',
           component: () => import('@/views/goods/incomingGoods/createIncomingGoods.vue'),
           meta:{
-            title: 'barang masuk'
+            title: 'barang masuk',
+            checkUnsavedChanges: true
           },
         },
         {
@@ -92,7 +94,8 @@ const router = createRouter({
           name: 'outgoingGoods.create',
           component: () => import('@/views/goods/outgoingGoods/createOutgoingGoods.vue'),
           meta:{
-            title: 'barang keluar'
+            title: 'barang keluar',
+            checkUnsavedChanges: true
           },
         },
         {
@@ -116,7 +119,8 @@ const router = createRouter({
           name: 'category.create',
           component: () => import('@/views/categories/createCategory.vue'),
           meta:{
-            title: 'kategori'
+            title: 'kategori',
+            checkUnsavedChanges: true
           },
         },
         {
@@ -140,7 +144,8 @@ const router = createRouter({
           name: 'supplier.create',
           component: () => import('@/views/suppliers/createSupplier.vue'),
           meta:{
-            title: 'Supplier'
+            title: 'Supplier',
+            checkUnsavedChanges: true
           },      
         },
         {

@@ -200,7 +200,7 @@ onMounted( async ()=>{
         <button class="btn-sve uk-text-capitalize" @click="outgoingGoodsStore.editOutgoingGoods()" 
         v-if="!outgoingGoodsStore.editing" style="width: 75px;">edit</button>
         <button class="btn-sve" @click="handleSubmit()" v-if="outgoingGoodsStore.editing">Simpan</button>
-        </div>
+      </div>
     </div>
     <div class="uk-flex uk-flex-between">
       <div class="uk-width-1-2"> <!--KIRI-->

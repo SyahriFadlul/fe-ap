@@ -199,7 +199,7 @@ onMounted ( () => {
 
 .active-menu {
 	background-color: #f0f0ff !important;
-	color: rgb(93, 135, 255) !important;
+	color: #5d87ff !important;
 }
 
 .active-menu > .sbar-item-text {

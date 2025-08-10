@@ -13,7 +13,8 @@ export const useCategoryStore = defineStore('category',{
         },
         errors:[],
         selectedCategory: [],
-        editing: false
+        editing: false,
+        hasUnsavedChanges: false,
     }),
     getters:{
         categoryItems: (state) => state.categoryList,

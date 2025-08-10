@@ -60,13 +60,13 @@
   color: #5f27cd;
   background-color: #f0f0f5 !important;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* sedikit timbul */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .btn-fs:hover {
-  background-color: #d6c4ee !important; /* ungu muda */
+  background-color: #d6c4ee !important;
   border-color: #b89bdd;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* efek timbul lebih kuat */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-edit {

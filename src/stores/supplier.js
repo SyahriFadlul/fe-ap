@@ -13,7 +13,8 @@ export const useSupplierStore = defineStore('supplier',{
         },
         selectedSupplier: [],
         errors: [],
-        editing: false
+        editing: false,
+        hasUnsavedChanges: false,
     }),
     getters:{
         supplierItems: (state) => state.supplierList,
@@ -86,6 +87,14 @@ export const useSupplierStore = defineStore('supplier',{
                 if(err.status === 422){
                     this.errors = err.response.data.errors
                     console.log(this.errors.name[0]);       
+                }
+                if(err.status === 500){
+                    this.UIkit.notification({
+                        message: 'Terjadi kesalahan pada server, silahkan coba lagi nanti.',
+                        status: 'danger',
+                        pos: 'top-center',
+                        timeout: 3000
+                    })
                 }
                 console.log(err.message);                
             })
