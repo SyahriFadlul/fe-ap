@@ -1,6 +1,6 @@
 <script setup>
 import { useCategoryStore } from '@/stores/category'
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { IconArrowLeft } from '@tabler/icons-vue'
 import { useUnitStore } from '@/stores/unit'
 import { useRoute, useRouter } from 'vue-router'
@@ -50,7 +50,7 @@ onMounted( async ()=>{
     <div class="card">
       <div class="uk-margin-small-bottom">
         <div class="label">Nama Kategori</div>
-        <input type="text" class="uk-width-3-5 uk-input uk-form-small" v-model="data.name">
+        <input type="text" class="uk-width-3-5 uk-input uk-form-small" v-model="data.name" placeholder="Masukkan nama kategori">
         <span v-if="categoryStore.error !== ''" v-for="error in categoryStore.error" 
         class="uk-text-danger uk-text-small uk-text-italic uk-margin-small-left">{{ error[0] }}</span>  
       </div>

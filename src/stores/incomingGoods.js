@@ -1,11 +1,11 @@
 import axios from "axios";
 import { defineStore } from "pinia";
-import { useGoodsStore } from "./goods";
-import { data } from "uikit";
+import debounce from "lodash.debounce";
 
 export const useIncomingGoodsStore = defineStore('incomingGoods',{
     state: () => ({
         incomingGoodsList: [],
+        isDataFiltered: false,
         pagination: {
             currentPage: 1,
             perPage: 10,
@@ -83,8 +83,7 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
     actions:{        
         async getIncomingGoodsData(page = 1){
             axios.get(`api/incoming-goods?page=${page}`)
-            .then( (res) => {       
-                console.log(res.data.data)                
+            .then( (res) => {                     
                 this.incomingGoodsList = res.data.data
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
@@ -144,6 +143,26 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
             })
             .catch( err => {throw err})
         },
+        async fetchFilteredData(date){            
+            await axios.get('api/incoming-goods', {
+                params: {
+                    start_date: date.value.startDate,
+                    end_date: date.value.endDate
+                }
+            })
+            .then( res => {
+                this.isDataFiltered = true
+                this.incomingGoodsList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page                
+            })
+            .catch( err => {
+                console.log(err);
+            })
+        },
         async editCartItem(data){
             this.selectedIncomingGoods = data
         },
@@ -163,6 +182,54 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                 // link.click();
             })
             .catch( err => console.log(err))
+        },
+        async exportToPDF(filter){
+            console.log(filter);
+            
+            axios.post('api/incoming-goods/export-pdf', 
+                {
+                    data : this.incomingGoodsList,
+                    filters: {
+                        start_date: filter.startDate,
+                        end_date: filter.endDate
+                    }
+                },
+                { responseType: 'blob' }
+            )
+            .then(res => {
+                console.log(res)
+                const url = window.URL.createObjectURL(new Blob([res.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `laporan-barang-masuk.pdf`)
+                document.body.appendChild(link)
+                link.click()
+            })
+            .catch(err => console.log(err))
+        },
+        async exportToExcel(filter){
+            console.log(filter);
+
+            axios.post('api/incoming-goods/export-excel',
+                {
+                    data : this.incomingGoodsList,
+                    filters: {
+                        start_date: filter.startDate,
+                        end_date: filter.endDate
+                    }
+                },
+                { responseType: 'blob' }
+            )
+            .then(res => {
+                console.log(res)
+                const url = window.URL.createObjectURL(new Blob([res.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `laporan-barang-masuk.xlsx`)
+                document.body.appendChild(link)
+                link.click()
+            })
+            .catch(err => console.log(err))
         },
         showDetails(item){
             this.clearCart()
@@ -254,7 +321,30 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                 received_date: '',
                 items: [],
             }
-        }
+        },
+        async _fetchIncomingGoodsSearch(query, loading) {
+            // loading(true)
+            await axios.get(`/api/incoming-goods/search?query=${query}`)
+            .then( res => {
+                this.incomingGoodsList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
+            })
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                // loading(false)
+            })
+        },
+
+        getIncomingGoodsSearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchIncomingGoodsSearch(query, loading)
+        }, 350),
     },
     persist: {
         storage: localStorage

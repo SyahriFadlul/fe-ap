@@ -12,7 +12,27 @@ export const useGoodsStore = defineStore('goods',{
             totalPage: 0,
             lastPage: 1,
         },
-        selectedGoods:[],
+        createSelectedGoods:{
+            name: null,
+            category_id: null,
+            base_unit_id: null,
+            medium_unit_id: null,
+            large_unit_id: null,
+            conversion_medium_to_base: null,
+            conversion_large_to_medium: null,
+            shelf_location: null,
+        },
+        detailEditSelectedGoods: {
+            id: null,
+            name: '',
+            category_id: null,
+            base_unit_id: null,
+            medium_unit_id: null,
+            large_unit_id: null,
+            conversion_medium_to_base: 1,
+            conversion_large_to_medium: 1,
+            shelf_location: '',
+        },
         total_stock: 0,
         search: '',
         offset: 0,
@@ -87,16 +107,17 @@ export const useGoodsStore = defineStore('goods',{
         async createGoods(data){
             this.errors = []
             this.isSubmitting = true
-            await axios.post('api/goods', {
-                name: data.name,
-                category_id: data.category_id,
-                base_unit_id: data.base_unit_id,
-                medium_unit_id: data.medium_unit_id,
-                large_unit_id: data.large_unit_id,
-                conversion_medium_to_base: data.conversion_medium_to_base,
-                conversion_large_to_medium: data.conversion_large_to_medium,
-                shelf_location: data.shelf_location,
-            })
+            // await axios.post('api/goods', {
+                //     name: data.name,
+                //     category_id: data.category_id,
+                //     base_unit_id: data.base_unit_id,
+                //     medium_unit_id: data.medium_unit_id,
+                //     large_unit_id: data.large_unit_id,
+                //     conversion_medium_to_base: data.conversion_medium_to_base,
+                //     conversion_large_to_medium: data.conversion_large_to_medium,
+                //     shelf_location: data.shelf_location,
+                // })
+            await axios.post('api/goods', this.createSelectedGoods)
             .then( async () =>{
                 this.UIkit.notification({
                     message: 'Barang berhasil ditambahkan!',
@@ -118,7 +139,7 @@ export const useGoodsStore = defineStore('goods',{
             .finally(() => this.isSubmitting = false)
         },
         async detailGoods(data){
-            this.selectedGoods = data
+            this.detailEditSelectedGoods = data
             console.log(data);
             if(this.currentItemBatches.id !== data.id){
                 await this.fetchCurrentItemBatches(data.id)
@@ -133,7 +154,7 @@ export const useGoodsStore = defineStore('goods',{
         },
         async updateGoods(data){
             this.isSubmitting = true
-            await axios.put(`api/goods/${this.selectedGoods.id}`, data)
+            await axios.put(`api/goods/${this.detailEditSelectedGoods.id}`, data)
             .then(async res => {
                 await this.fetchGoods()
                 console.log(res.status)
@@ -209,6 +230,18 @@ export const useGoodsStore = defineStore('goods',{
         //     // .catch(err => console.log(err))
             
         // },
+        clearCreateGoodsForm() {
+            this.createSelectedGoods = {
+                name: '',
+                category_id: null,
+                base_unit_id: null,
+                medium_unit_id: null,
+                large_unit_id: null,
+                conversion_medium_to_base: null,
+                conversion_large_to_medium: null,
+                shelf_location: '',
+            }
+        },
         async _fetchGoodsSelect(query, loading) {
             loading(true)
             await axios.get(`/api/goods/select?search=${query}`)
@@ -226,6 +259,34 @@ export const useGoodsStore = defineStore('goods',{
         getSelectSearch: debounce(function (query, loading) {
             if (!query.length) return
             this._fetchGoodsSelect(query, loading)
+        }, 350),
+
+        async _fetchGoodsSearch(query, loading) {
+            // loading(true)
+            await axios.get(`/api/goods/search?query=${query}`)
+            .then( res => {
+                console.log(res);
+                
+                this.goodsList = res.data.data
+                console.log(this.goodsList);
+                
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
+            })
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                // loading(false)
+            })
+        },
+
+        getGoodsSearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchGoodsSearch(query, loading)
         }, 350),
     },
     persist: {

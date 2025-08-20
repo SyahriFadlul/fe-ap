@@ -6,8 +6,10 @@ import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@ta
 import Paginate from 'vuejs-paginate-next';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import { useAuthStore } from '@/stores/auth';
 
 const userStore = useUserStore()
+const authStore = useAuthStore()
 
 const columns = [
   { key: 'username', label: 'Username' },
@@ -79,7 +81,7 @@ onMounted( async ()=>{
 				<template #actions="{ item }">
 					<button @click="userStore.showDetails(item)" class="uk-margin-small-right btn-edit"><IconEye :size="18"/></button>
 					<button @click="userStore.deleteUser(item)" class="btn-del" 
-          v-if="item.username !== 'admin' || item.role !== 'admin'"><IconTrash :size="18"/></button>
+          v-if="item.id !== authStore.user.id"><IconTrash :size="18"/></button>
 				</template>
 			</baseTable>
 		</div>

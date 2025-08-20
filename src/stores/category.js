@@ -1,5 +1,6 @@
 import axios from "axios";
 import { defineStore } from "pinia";
+import debounce from "lodash.debounce";
 
 export const useCategoryStore = defineStore('category',{
     state: () => ({
@@ -12,6 +13,14 @@ export const useCategoryStore = defineStore('category',{
             lastPage: 1,
         },
         errors:[],
+        createSelectedCategory:{
+            name: null,
+            note: null,
+        },
+        detailEditSelectedCategory:{
+            name: null,
+            note: null,
+        },
         selectedCategory: [],
         editing: false,
         hasUnsavedChanges: false,
@@ -103,29 +112,29 @@ export const useCategoryStore = defineStore('category',{
             })
             .catch( err => false)
         },
-        async downloadGoods(){
-            axios.get('api/goods/get-pdf', {
-                params: {
-                    stock_min: 20,
-                }
-            })
+        async _fetchCategorySearch(query, loading) {
+            // loading(true)
+            await axios.get(`/api/categories/search?query=${query}`)
             .then( res => {
-                console.log(res)                
-                // const url = window.URL.createObjectURL(new Blob([res.data]));
-                // const link = document.createElement('a');
-                // link.href = url;
-                // link.setAttribute('download', `goods_${id}.zip`);
-                // document.body.appendChild(link);
-                // link.click();
+                this.categoryList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
             })
-            .catch( err => console.log(err))
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                // loading(false)
+            })
         },
 
-        async getIncomingGoodsData(){
-            axios.get('api/incoming-goods')
-            .then( res => console.log(res.data))
-            .catch( err => console.log(err))            
-        }
+        getCategorySearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchCategorySearch(query, loading)
+        }, 350),
     },
     persist: {
         storage: localStorage

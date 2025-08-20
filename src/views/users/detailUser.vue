@@ -2,28 +2,47 @@
 import { onMounted, ref, nextTick, watch } from 'vue'
 import { IconArrowLeft } from '@tabler/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2';
 
 
 const userStore = useUserStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 function cancel(){
   router.go(-1)
 }
 
-function handleSaveOrEdit(data) {
-  if (editMode.value) {
-    // Logic to save edited user
-    // userStore.updateUser(data)
-    Swal.fire({
-      title: 'Berhasil!',
-      text: 'User berhasil diperbarui.',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false,
-    })
+async function handleSaveOrEdit(data) {
+  if (editMode.value) {    
+    try {
+      await userStore.updateUser(data)
+      Swal.fire({
+        title: 'Berhasil!',
+        text: 'User berhasil diperbarui.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      editMode.value = false
+      togglePassword.value = false
+      togglePassword2.value = false
+      router.push({ name: 'user.index' })
+      await userStore.fetchUsers()
+    } catch (error) {
+      console.log(error);
+      if ( error.status !== 422){
+        Swal.fire({
+          title: 'Error!',
+          text: 'Terjadi kesalahan saat memperbarui user.',
+          icon: 'error',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+      }
+    }
   } else {
     // Logic to edit user
     editMode.value = true
@@ -31,12 +50,13 @@ function handleSaveOrEdit(data) {
 }
 
 const togglePassword = ref(false)
+const togglePassword2 = ref(false)
 const editMode = ref(false)
 
 const data = ref({
   username: userStore.selectedUser.username || '',
-  oldPassword: '',
-  newPassword: '',
+  current_password: '',
+  password: '',
   role: userStore.selectedUser.role || '',
 })
 
@@ -45,6 +65,7 @@ watch(()=> data.value.role,(newVal)=>{
 })
 
 onMounted( async ()=>{
+  userStore.errors = null
 })
 </script>
 <template>
@@ -75,30 +96,37 @@ onMounted( async ()=>{
           @click="()=>togglePassword = !togglePassword" :class="{'uk-active': togglePassword}"
           :uk-icon="togglePassword ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
         </div>
-      </div>
-      <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5" v-if="editMode"> <!-- Password baru -->
-        <div class="label">Password Baru</div>
-        <div class="uk-inline">
-          <input :type="togglePassword ? 'text' : 'password'" class="uk-input uk-form-small"
-          :disabled="!editMode" v-model="data.newPassword" placeholder="Masukkan password baru"
-          >
-          <button class="uk-form-icon uk-form-icon-flip toggle-password" type="button" v-if="editMode"
-          @click="()=>togglePassword = !togglePassword" :class="{'uk-active': togglePassword}"
-          :uk-icon="togglePassword ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
-        </div>
-      </div>
+      </div>      
       <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5" v-if="editMode"> <!-- Password lama-->
         <div class="label">Password Lama</div>
         <div class="uk-inline">
           <input :type="togglePassword ? 'text' : 'password'" class="uk-input uk-form-small"
           :disabled="!editMode" 
-          v-model="data.oldPassword" placeholder="Masukkan password lama">
+          v-model="data.current_password" placeholder="Masukkan password lama">
           <button class="uk-form-icon uk-form-icon-flip toggle-password" type="button"
           @click="()=>togglePassword = !togglePassword" :class="{'uk-active': togglePassword}"
           :uk-icon="togglePassword ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
         </div>
+        <div v-if="userStore.error?.current_password" class="uk-text-danger uk-text-small">
+          {{ userStore.error.current_password[0] }}
+        </div>
       </div>
-      <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5">
+      <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5" v-if="editMode"> <!-- Password baru -->
+        <div class="label">Password Baru</div>
+        <div class="uk-inline">
+          <input :type="togglePassword2 ? 'text' : 'password'" class="uk-input uk-form-small"
+          :disabled="!editMode" v-model="data.password" placeholder="Masukkan password baru"
+          >
+          <button class="uk-form-icon uk-form-icon-flip toggle-password" type="button" v-if="editMode"
+          @click="()=>togglePassword2 = !togglePassword2" :class="{'uk-active': togglePassword2}"
+          :uk-icon="togglePassword2 ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
+        </div>
+        <div v-if="userStore.error?.password" class="uk-text-danger uk-text-small">
+            {{ userStore.error.password[0] }}
+        </div>
+      </div>
+      <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5" 
+      v-if="authStore.user.id !== 1 || authStore.user.username !== 'admin'">
         <div class="label">Role</div>
         <select class="uk-form-small om uk-width-1-1" :disabled="!editMode" v-model="data.role" placeholder="- - Pilih Role - -">
           <option value="kosong" class="" disabled selected>- - Pilih Role - -</option>
@@ -109,7 +137,7 @@ onMounted( async ()=>{
       <div class="uk-flex uk-flex-row uk-flex-right uk-margin-medium-top">
         <template v-if="userStore.selectedUser.role !== 'admin' || userStore.selectedUser.username !== 'admin'">
           <button class="btn-del uk-margin-large-right" style="width: 150px;border-radius: 8px;"
-          @click="userStore.deleteUser(data)" v-if="!editMode">Hapus</button>
+          @click="userStore.deleteUser(userStore.selectedUser)" v-if="!editMode">Hapus</button>
         </template>
         <button class="btn-cnl uk-margin-medium-right" 
         @click="()=>editMode = false" v-if="editMode">Batal</button>

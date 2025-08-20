@@ -133,7 +133,8 @@ export const useAuthStore = defineStore("auth",{
             this.authStatus = null
             await axios.post('reset-password' , data)
             .then((res)=>{
-                this.router.push('api/login')
+                console.log(res);
+                
             })
             .catch((err)=>{
                 console.log(err);

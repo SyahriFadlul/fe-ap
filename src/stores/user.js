@@ -1,5 +1,6 @@
 import axios from "axios";
 import { defineStore } from "pinia";
+import debounce from "lodash.debounce";
 
 export const useUserStore = defineStore('user',{
     state: () => ({
@@ -12,9 +13,11 @@ export const useUserStore = defineStore('user',{
             lastPage: 1,
         },
         selectedUser: null,
+        errors: null,
     }),
     getters:{
         userItems: (state) => state.userList,
+        error: (state) => state.errors,
     },
     actions:{
         async fetchUsers(page = 1){
@@ -46,28 +49,36 @@ export const useUserStore = defineStore('user',{
             )
             .catch( err => {
                 if(err.response.status === 422){
-                    this.errors = err.response.data.errors
-                    console.log(this.errors.name[0]);       
+                    this.errors = err.response.data.errors      
                 }
                 console.log(err.message);
             })            
         },
         async updateUser(data) {
-            await axios.put(`api/users/${data.id}`, data)
-            .then( async () => {
-                this.UIkit.notification({
-                    message: 'User berhasil diperbarui!',
-                    status: 'success',
-                    pos: 'top-center',
-                })
-            })
-            .catch( err => {
+            try {
+                const res = await axios.put(`api/users/${this.selectedUser.id}`, data)
+                console.log(res);
+            } catch (err) {
+                console.log(err)
                 if(err.response.status === 422){
                     this.errors = err.response.data.errors
-                    console.log(this.errors.name[0]);
+                    // console.log(this.errors.name[0]);
                 }
-                console.log(err.message);
-            })
+                throw err;
+                
+            }
+            // axios.put(`api/users/${this.selectedUser.id}`, data)
+            // .then( (res) => {
+            //     console.log(res);
+                
+            //     // this.UIkit.notification({
+            //     //     message: 'User berhasil diperbarui!',
+            //     //     status: 'success',
+            //     //     pos: 'top-center',
+            //     // })
+            // })
+            // .catch( err => {
+            // })
         },
         async deleteUser(data) {
             this.Swal.fire({
@@ -80,14 +91,16 @@ export const useUserStore = defineStore('user',{
             }).then(async (result) => {
                 if (result.isConfirmed) {
                 try {
-                    const res = await axios.delete(`api/users/${data.id}`)
-                    Swal.fire({
+                    await axios.delete(`api/users/${data.id}`)
+                    await this.fetchUsers()
+                    this.router.push({ name: 'user.index' });
+                    this.Swal.fire({
                         title: 'Dihapus!',
                         text: 'User berhasil dihapus.',
                         icon: 'success',
                         timer: 1500,
                         showConfirmButton: false,
-                    })        
+                    })
                 } catch (error) {
                     console.log(error.message);
                     
@@ -103,7 +116,25 @@ export const useUserStore = defineStore('user',{
         showDetails(item){
             this.selectedUser = item;
             this.router.push({ name: 'user.detail', params: { id: item.id } });
-        }
+        },
+        async _fetchUserSearch(query, loading) {
+            loading(true)
+            await axios.get(`/api/users/search?query=${query}`)
+            .then( res => {
+                this.resUserQuery = res.data
+            })
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                loading(false)
+            })
+        },
+
+        getUserSearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchUserSearch(query, loading)
+        }, 350),
     },
     persist: {
         storage: localStorage

@@ -1,8 +1,7 @@
 import axios from "axios";
 import { defineStore } from "pinia";
 import { useUnitStore } from "./unit";
-import { toRaw } from "vue";
-import { update } from "uikit";
+import debounce from "lodash.debounce";
 
 export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
     state: () => ({
@@ -39,6 +38,7 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
         editing: false,
         errors: [],
         fifo: false,
+        isDataFiltered: false,
     }),
     getters:{
         outgoingGoodsItemList: (state) => state.outgoingGoodsList,
@@ -69,10 +69,13 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
 
     },
     actions:{        
-        async fetchOutgoingGoods(){
-            axios.get('api/outgoing-goods')
-            .then( (res) => {       
-                console.log(res.data.data)                
+        async fetchOutgoingGoods(page = 1){
+            axios.get('api/outgoing-goods', {
+                params: {
+                    page
+                }
+            })
+            .then( (res) => {
                 this.outgoingGoodsList = res.data.data
                 this.pagination.currentPage = res.data.meta.current_page
                 this.pagination.perPage = res.data.meta.per_page
@@ -128,6 +131,48 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
                 console.log(res.status);
             })
             .catch( err => {throw err})
+        },
+        async fetchFilteredData(date){            
+            await axios.get('api/outgoing-goods', {
+                params: {
+                    start_date: date.value.startDate,
+                    end_date: date.value.endDate
+                }
+            })
+            .then( res => {
+                this.isDataFiltered = true
+                this.outgoingGoodsList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page                
+            })
+            .catch( err => {
+                console.log(err);
+            })
+        },
+        async exportToPDF(filter){
+            console.log('t');
+
+            axios.post('api/outgoing-goods/export-pdf', {
+                data : this.outgoingGoodsList,
+                filters: {
+                    start_date: filter.startDate,
+                    end_date: filter.endDate
+                }
+            },
+            { responseType: 'blob' })
+            .then(res => {
+                console.log(res)
+                const url = window.URL.createObjectURL(new Blob([res.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `laporan-barang-keluar.pdf`)
+                    document.body.appendChild(link)
+                    link.click()
+                })
+            .catch(err => console.log(err))
         },
         editOutgoingGoods(){
             this.editing = true
@@ -231,6 +276,7 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
         setCartPage(page) {
             this.cartPagination.currentPage = page
         },
+        
         showDetails(item){ //dari index ke detail/edit page
             this.clearCart()
             this.clearCurrentItem()
@@ -302,7 +348,30 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
                 note: '',
                 items: [],
             }
-        }
+        },
+        async _fetchOutgoingGoodsSearch(query, loading) {
+            // loading(true)
+            await axios.get(`/api/outgoing-goods/search?query=${query}`)
+            .then( res => {
+                this.outgoingGoodsList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
+            })
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                // loading(false)
+            })
+        },
+
+        getOutgoingGoodsSearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchOutgoingGoodsSearch(query, loading)
+        }, 350),
     },
     persist: {
         storage: localStorage

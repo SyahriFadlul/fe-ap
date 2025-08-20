@@ -1,5 +1,6 @@
 import axios from "axios";
 import { defineStore } from "pinia";
+import debounce from "lodash.debounce";
 
 export const useSupplierStore = defineStore('supplier',{
     state: () => ({
@@ -109,29 +110,28 @@ export const useSupplierStore = defineStore('supplier',{
             })
             .catch( err => {throw err})
         },
-        async downloadGoods(){
-            axios.get('api/goods/get-pdf', {
-                params: {
-                    stock_min: 20,
-                }
-            })
+        async _fetchSupplierSearch(query, loading) {
+            // loading(true)
+            await axios.get(`/api/suppliers/search?query=${query}`)
             .then( res => {
-                console.log(res)                
-                // const url = window.URL.createObjectURL(new Blob([res.data]));
-                // const link = document.createElement('a');
-                // link.href = url;
-                // link.setAttribute('download', `goods_${id}.zip`);
-                // document.body.appendChild(link);
-                // link.click();
+                this.supplierList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
             })
-            .catch( err => console.log(err))
+            .catch( err => {
+                console.error(err)
+            })
+            .finally(() => {
+                // loading(false)
+            })
         },
-
-        async getIncomingGoodsData(){
-            axios.get('api/incoming-goods')
-            .then( res => console.log(res.data))
-            .catch( err => console.log(err))            
-        }
+        getSupplierSearch: debounce(function (query, loading) {
+            if (!query.length) return
+            this._fetchSupplierSearch(query, loading)
+        }, 350),
     },
     persist: {
         storage: localStorage

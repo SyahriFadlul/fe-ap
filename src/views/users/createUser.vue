@@ -25,7 +25,8 @@ watch(()=> data.value.role,(newVal)=>{
 })
 
 onMounted( async ()=>{
-  data.value.role = 'kosong'
+  data.value.role = ''
+  userStore.errors = null
 })
 </script>
 <template>
@@ -44,6 +45,7 @@ onMounted( async ()=>{
       <div class="uk-flex uk-flex-column uk-width-3-5 uk-margin-small-bottom">
         <label class="label">Username</label>
         <input type="text" class="uk-input uk-form-small" v-model="data.username" placeholder="Masukkan nama pengguna">
+        <div v-if="userStore.error?.username" class="uk-text-small uk-text-danger">{{ userStore.error.username[0] }}</div>
       </div>  
       <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5">
         <div class="label">Password</div>
@@ -54,15 +56,17 @@ onMounted( async ()=>{
           @click="()=>togglePassword = !togglePassword" :class="{'uk-active': togglePassword}"
           :uk-icon="togglePassword ? 'icon: eye; ratio: 1.2' : 'icon: eye-slash; ratio: 1.2'"></button>
         </div>
+        <div v-if="userStore.error?.password" class="uk-text-small uk-text-danger">{{ userStore.error.password[0] }}</div>
       </div>
       <div class="uk-flex uk-flex-column uk-margin-small-top uk-width-3-5">
         <div class="label">Role</div>
         <select class="uk-form-small om uk-width-1-1" v-model="data.role" placeholder="- - Pilih Role - -">
-          <option value="kosong" class="" disabled selected>- - Pilih Role - -</option>
+          <option value="" class="" disabled selected>- - Pilih Role - -</option>
           <option value="admin">Admin</option>
           <option value="staff">Staff</option>
-        </select>     
-      </div>      
+        </select>
+        <div v-if="userStore.error?.role" class="uk-text-small uk-text-danger">{{ userStore.error.role[0] }}</div>
+      </div>
       <div class="uk-flex uk-flex-row uk-flex-right uk-margin-medium-top">
         <button class="btn-cnl uk-margin-medium-right" @click="()=>router.go(-1)">Batalkan</button>
         <button class="btn-sve" @click="userStore.createUser(data)">Simpan</button>

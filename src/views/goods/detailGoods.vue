@@ -15,14 +15,14 @@ const router = useRouter()
 const route = useRoute()
 
 const data = ref({
-  name: goodsStore.selectedGoods.name || '',
-  category_id: goodsStore.selectedGoods.category_id || null,
-  base_unit_id: goodsStore.selectedGoods.base_unit_id || null,
-  medium_unit_id: goodsStore.selectedGoods.medium_unit_id || null,
-  large_unit_id: goodsStore.selectedGoods.large_unit_id || null,
-  conversion_medium_to_base: goodsStore.selectedGoods.conversion_medium_to_base || null,
-  conversion_large_to_medium: goodsStore.selectedGoods.conversion_large_to_medium || null,
-  shelf_location: goodsStore.selectedGoods.shelf_location || '',
+  name: goodsStore.detailEditSelectedGoods.name || '',
+  category_id: goodsStore.detailEditSelectedGoods.category_id || null,
+  base_unit_id: goodsStore.detailEditSelectedGoods.base_unit_id || null,
+  medium_unit_id: goodsStore.detailEditSelectedGoods.medium_unit_id || null,
+  large_unit_id: goodsStore.detailEditSelectedGoods.large_unit_id || null,
+  conversion_medium_to_base: goodsStore.detailEditSelectedGoods.conversion_medium_to_base || null,
+  conversion_large_to_medium: goodsStore.detailEditSelectedGoods.conversion_large_to_medium || null,
+  shelf_location: goodsStore.detailEditSelectedGoods.shelf_location || '',
 })
 
 function handleUpdate(){

@@ -1,13 +1,14 @@
 <script setup>
 import { useSupplierStore } from '@/stores/supplier';
 import baseTable from '../../components/baseTable.vue';
-import { onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import { onMounted, watch, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { IconEye, IconTrash, IconPlus, IconSortAscending, IconSortDescending, IconFilter } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
 import Swal from 'sweetalert2';
 
 const supplierStore = useSupplierStore()
+const router = useRouter()
 
 const columns = [
   { key: 'company_name', label: 'Nama Instansi' },
@@ -56,6 +57,29 @@ function deleteSupplier(item){
   })
 }
 
+const supplierQuery = ref('')
+watch(supplierQuery, async (newVal) => {
+  if(newVal === ''){
+    let page = 1
+    if(parseInt(router.query.page) !== 1){
+      router.push({ name: 'supplier.index', query: { ...router.query, page } })
+      
+      return
+    }
+    await supplierStore.fetchSuppliers(page) 
+  }
+})
+
+const isAscending = ref(true)
+
+watch(isAscending, (value) => {
+  supplierStore.supplierItems.sort((a, b) => {
+    return value
+      ? a.company_name.localeCompare(b.company_name)   // A → Z
+      : b.company_name.localeCompare(a.company_name)   // Z → A
+  })
+})
+
 onMounted( async ()=>{
   supplierStore.editing = false
   if (supplierStore.supplierItems.length < 1){
@@ -67,10 +91,14 @@ onMounted( async ()=>{
 	<div>        
 		<div></div>
 		<div class="uk-flex uk-flex-bottom">
-			<input type="text" class="search uk-text-italic" placeholder="Cari supplier">
+			<input type="text" class="search uk-text-italic" placeholder="Cari supplier..." v-model="supplierQuery"
+      @input="supplierStore.searchSupplier($event.target.value)">
 			<div class="uk-margin-medium-left">
-				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
-				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+				<!-- <button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button> -->
+				<button class="btn-fs" @click="()=> isAscending = !isAscending" uk-tooltip="Urutkan Berdasarkan Abjad">
+          <icon-sort-ascending :size="18" v-show="isAscending"/>
+          <icon-sort-descending :size="18" v-show="!isAscending"/>
+        </button>
 			</div>
 			<div class="uk-margin-auto-left">
 				<RouterLink :to="{name: 'supplier.create'}">

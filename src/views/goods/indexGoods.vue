@@ -128,6 +128,18 @@ watch(()=> goodsStore.categoryDistribution,
     }
 )
 
+const goodsQuery = ref('')
+
+watch(goodsQuery, async (newVal) => {
+  console.log(newVal);
+  
+  if(newVal === ''){
+    await goodsStore.fetchGoods(1)
+    let page = 1
+    router.push({ name: 'goods.index', query: {...route.query, page} })
+  }
+})
+
 watch(()=> route.query.page,
   async (page)=>{
     goodsStore.pagination.currentPage = page    
@@ -166,12 +178,17 @@ onMounted( async ()=>{
     <hr class="uk-divider uk-margin-small">
     <div class="uk-flex uk-margin-small-top">
       <div class="">
-        <input type="text" class="search uk-text-italic" placeholder="Cari barang..." v-model="goodsStore.searchQuery">
+        <input type="text" class="search uk-text-italic" placeholder="Cari barang..." v-model="goodsQuery" 
+        @input="(e)=> {
+          goodsStore.getGoodsSearch(e.target.value)
+          goodsQuery = e.target.value
+          }
+        ">
       </div>
-      <div class="uk-margin-medium-left">
+      <!-- <div class="uk-margin-medium-left">
 				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
 				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
-			</div>
+			</div> -->
       <div class="uk-margin-auto-left">
         <RouterLink :to="{name: 'goods.create'}">
           <button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang</button>

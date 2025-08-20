@@ -2,14 +2,15 @@
 import { useCategoryStore } from '@/stores/category';
 import baseTable from '../../components/baseTable.vue';
 import { onMounted } from 'vue';
-import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import { IconEye, IconTrash, IconPlus, IconSortAscending, IconSortDescending, IconFilter } from '@tabler/icons-vue';
 import Swal from 'sweetalert2';
-import { watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { watch,ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Paginate from 'vuejs-paginate-next';
 
 const categoryStore = useCategoryStore()
 const route = useRoute()
+const router = useRouter()
 
 function deleteCategory(item){
   Swal.fire({
@@ -54,6 +55,27 @@ async function clickCallback(page){
     query: {...route.query, page}
   })  
 }
+const categoryQuery = ref ('')
+watch(categoryQuery, async (newVal) => {
+  if(newVal === ''){
+    let page = 1
+    if(parseInt(route.query.page) !== 1){
+      router.push({ name: 'category.index', query: {...route.query, page} })
+      return
+    }
+    await categoryStore.fetchCategories(page)
+  }
+})
+
+const isAscending = ref(true)
+
+watch(isAscending, (value) => {
+  categoryStore.categoryItems.sort((a, b) => {
+    return value
+      ? a.name.localeCompare(b.name)   // A → Z
+      : b.name.localeCompare(a.name)   // Z → A
+  })
+})
 
 watch(()=> route.query.page,
   async (page)=>{
@@ -72,10 +94,14 @@ onMounted( async ()=>{
 	<div>        
 		<div></div>
 		<div class="uk-flex uk-flex-bottom">
-			<input type="text" class="search uk-text-italic" placeholder="Cari kategori">
+			<input type="text" class="search uk-text-italic" placeholder="Cari kategori" v-model="categoryQuery"
+      @input="(e)=> categoryStore.getCategorySearch(e.target.value)">
 			<div class="uk-margin-medium-left">
-				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
-				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+				<!-- <button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button> -->
+				<button class="btn-fs" @click="()=> isAscending = !isAscending" uk-tooltip="Urutkan Berdasarkan Abjad">
+          <icon-sort-ascending :size="18" v-show="isAscending"/>
+          <icon-sort-descending :size="18" v-show="!isAscending"/>
+        </button>
 			</div>
 			<div class="uk-margin-auto-left">
 				<RouterLink :to="{name: 'category.create'}">

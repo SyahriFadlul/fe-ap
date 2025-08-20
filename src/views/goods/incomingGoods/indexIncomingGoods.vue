@@ -1,12 +1,13 @@
 <script setup>
 import { useIncomingGoodsStore } from '@/stores/incomingGoods';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import baseTable from '@/components/baseTable.vue';
-import { IconFilter, IconSortAscending, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue';
+import { IconFilter, IconSortAscending, IconSortDescending, IconPlus, IconEye, IconTrash } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import VueDatePicker from '@vuepic/vue-datepicker';
+import UIkit from 'uikit';
 
 const incomingGoodsStore = useIncomingGoodsStore()
 const route = useRoute()
@@ -69,51 +70,43 @@ function deleteIncomingGoods(item){
   })
 }
 
-const sortDate = ref({
+const incomingGoodsQuery = ref('')
+watch(incomingGoodsQuery, async (newVal) => {
+  if(newVal === ''){
+    let page = 1
+    if(parseInt(route.query.page) !== 1){
+      router.push({ name: 'incomingGoods.index', query: { ...route.query, page } })
+      return
+    }
+    await incomingGoodsStore.getIncomingGoodsData(page)
+  }
+})
+
+const isAscending = ref(true)
+
+watch( isAscending, (value)=>{
+  incomingGoodsStore.incomingGoodsList.sort((a, b) => {
+    const dateA = new Date(a.received_date);
+    const dateB = new Date(b.received_date);
+
+    if (value) {// ASCENDING      
+      return dateA - dateB;
+    } else {// DESCENDING      
+      return dateB - dateA;
+    }
+  });
+  
+})
+
+const filterDate = ref({
   startDate: new Date(),
   endDate: new Date(),
 })
 
-const showDropdown = ref(false)
-
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value;
-};
-
-// Tutup dropdown kalau klik di luar
-const handleClickOutside = (e) => {
-  if (!e.target.closest(".uk-inline")) {
-    showDropdown.value = false;
-  }
-};
-
-function applyFilter(){
-  
+async function applyFilter(){
+  UIkit.dropdown('#filterDate', 'hide')
+  await incomingGoodsStore.fetchFilteredData(filterDate)
 }
-
-const rows = [
-  {
-    fields: [
-      { label: 'Nama Supplier', component: 'input', props: { type: 'text', value: 'PT Kimia Farma', disabled: true } }
-    ]
-  },
-  {
-    fields: [
-      { label: 'Satuan', component: 'input', props: { type: 'text', value: 'Botol', disabled: true } },
-      { label: 'Isi per Satuan', component: 'input', props: { type: 'text', value: '100 ml', disabled: true } },
-      { label: 'Jumlah', component: 'input', props: { type: 'text', value: '5', disabled: true } },
-    ]
-  },
-]
-const tableItems = [
-  { batch: 'B123', qty: 5, price: '20.000' },
-  { batch: 'B124', qty: 3, price: '22.000' },
-]
-const columns2 = [
-  { key: 'batch', label: 'Batch' },
-  { key: 'qty', label: 'Qty' },
-  { key: 'price', label: 'Harga' },
-];
 
 watch(()=> route.query.page,
   async (page)=>{
@@ -124,30 +117,38 @@ watch(()=> route.query.page,
 )
 
 onMounted( async () => {
+  filterDate.value.startDate = null
+  filterDate.value.endDate = null
+  if (incomingGoodsStore.isDataFiltered) {
+    await incomingGoodsStore.getIncomingGoodsData()
+    incomingGoodsStore.isDataFiltered = false
+  }
   if (incomingGoodsStore.incomingGoodsItemList.length < 1){
     await incomingGoodsStore.getIncomingGoodsData()
   }
-	console.log(incomingGoodsStore.incomingGoodsItemList);
-	console.log(typeof incomingGoodsStore.pagination.currentPage);
+	// console.log(incomingGoodsStore.incomingGoodsItemList);
+	// console.log(typeof incomingGoodsStore.pagination.currentPage);
 	
 }) 
 </script>
 <template>
 	<div>        
 		<div class="uk-flex uk-flex-bottom">
-			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nomor faktur">
+			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nomor faktur" v-model="incomingGoodsQuery"
+      @input="incomingGoodsStore.getIncomingGoodsSearch($event.target.value)">
 			<div class="uk-margin-medium-left">
         <div class="uk-inline">
           <button class="btn-fs uk-margin-small-right" type="button"><icon-filter :size="18"/></button>
-          <div class="uk-width-large" uk-dropdown="mode: click;">
+          <div class="uk-width-large" id="filterDate" uk-dropdown="mode: click;">
             <div class="uk-flex uk-flex-between">
               <div class="uk-flex uk-flex-column">
                 <div>Tanggal Awal</div>
-                <VueDatePicker placeholder="Pilih tanggal awal" v-model="sortDate.startDate"/>
+                <VueDatePicker placeholder="Pilih tanggal awal" v-model="filterDate.startDate"/>
               </div>
-              <div class="uk-flex uk-flex-column">
+              <div class="uk-flex uk-flex-column uk-margin-small-left">
                 <div>Tanggal Akhir:</div>
-                <VueDatePicker placeholder="Pilih tanggal akhir" v-model="sortDate.endDate"/>
+                <VueDatePicker placeholder="Pilih tanggal akhir" :disabled="!filterDate.startDate"
+                :start-date="filterDate.startDate" :min-date="filterDate.startDate" v-model="filterDate.endDate"/>
               </div>
             </div>
             <div class="uk-margin-top">
@@ -155,11 +156,18 @@ onMounted( async () => {
             </div>
         </div>
       </div>
-        <button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+        <button class="btn-fs" @click="()=> isAscending = !isAscending" uk-tooltip="Urutkan Berdasarkan Tanggal Penerimaan">
+          <icon-sort-ascending :size="18" v-show="isAscending"/>
+          <icon-sort-descending :size="18" v-show="!isAscending"/>
+        </button>
       </div>      
       <div class="uk-margin-auto-left uk-flex uk-flex-row uk-flex-middle">
-        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke PDF</button>
-        <button class="btn-add uk-flex uk-flex-middle uk-margin-right">Eksport Ke Excel(XLS)</button>
+        <div class="uk-flex uk-flex-row" 
+        >
+        <!-- v-if="filterDate.startDate !== null && filterDate.endDate !== null" -->
+          <button class="btn-add uk-flex uk-flex-middle uk-margin-right" @click="incomingGoodsStore.exportToPDF(filterDate)">Eksport Ke PDF</button>
+          <button class="btn-add uk-flex uk-flex-middle uk-margin-right" @click="incomingGoodsStore.exportToExcel(filterDate)">Eksport Ke Excel(.xls)</button>
+        </div>
         <RouterLink :to="{name: 'incomingGoods.create'}">
           <button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Masuk</button>
         </RouterLink>
