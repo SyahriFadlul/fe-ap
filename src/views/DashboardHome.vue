@@ -1,7 +1,7 @@
 <script setup>
 import { useGoodsStore } from '@/stores/goods';
 import { onMounted, ref, provide } from 'vue';
-import { IconBox, IconPackageImport, IconPackageExport, IconHourglassLow } from '@tabler/icons-vue'
+import { IconBox, IconPackageImport, IconPackageExport, IconHourglassLow, IconAlertTriangle } from '@tabler/icons-vue'
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { PieChart, BarChart } from "echarts/charts";
@@ -13,12 +13,14 @@ import VChart, { THEME_KEY } from "vue-echarts";
 import { CountTo } from 'vue3-count-to';
 import { useSettingStore } from '@/stores/setting';
 import { useAuthStore } from '@/stores/auth';
+import { useChartStore } from '@/stores/chart';
 
 const goodsStore = useGoodsStore()
 const link = import.meta.env.VITE_API_BASE_URL
 const isVisible = ref(true)
 const settingStore = useSettingStore()
 const authStore =useAuthStore()
+const chartStore = useChartStore()
 
 use([
   CanvasRenderer,
@@ -48,7 +50,7 @@ const option = ref({
     orient: "vertical",
     left: "left",
     top:40,
-    data: ["PT. Combi Putra", "PT. Nara Artha", "Kudamas"]
+    data: chartStore.supplierChartLegend || [],
   },
   series: [
     {
@@ -56,11 +58,7 @@ const option = ref({
       type: "pie",
       radius: "55%",
       center: ["50%", "60%"],
-      data: [
-        { value: 335, name: "PT. Combi Putra" },
-        { value: 310, name: "PT. Nara Artha" },
-        { value: 234, name: "Kudamas"},
-      ],
+      data: chartStore.supplierChartSeries || [],
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
@@ -71,6 +69,18 @@ const option = ref({
     }
   ]
 });
+
+function getMarkPointData(seriesData) {
+  const maxValue = Math.max(...seriesData);
+  const minValue = Math.min(...seriesData);
+  const maxIndex = seriesData.indexOf(maxValue);
+  const minIndex = seriesData.indexOf(minValue);
+
+  return [
+    { name: 'Max', value: maxValue, xAxis: maxIndex, yAxis: maxValue },
+    { name: 'Min', value: minValue, xAxis: minIndex, yAxis: minValue }
+  ];
+}
 
 const option2 = {
   title: {
@@ -98,7 +108,7 @@ const option2 = {
     {
       type: 'category',
       // prettier-ignore
-      data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      data: chartStore.labelsGraph
     }
   ],
   yAxis: [
@@ -110,15 +120,8 @@ const option2 = {
     {
       name: 'Barang Masuk',
       type: 'bar',
-      data: [
-        2, 4, 7, 23, 25, 76, 135, 162, 32, 20, 6, 3
-      ],
-      markPoint: {
-        data: [
-          { type: 'max', name: 'Max' },
-          { type: 'min', name: 'Min' }
-        ]
-      },
+      data: chartStore.incomingDataGraph,
+      markPoint: { data: getMarkPointData(chartStore.incomingDataGraph) },
       markLine: {
         data: [{ type: 'average', name: 'Avg' }]
       }
@@ -126,15 +129,8 @@ const option2 = {
     {
       name: 'Barang Keluar',
       type: 'bar',
-      data: [
-        2, 5, 9, 26, 28, 70, 175, 182, 48, 18, 6, 2
-      ],
-      markPoint: {
-        data: [
-          { name: 'Max', value: 182, xAxis: 7, yAxis: 183 },
-          { name: 'Min', value: 2, xAxis: 11, yAxis: 3 }
-        ]
-      },
+      data: chartStore.outgoingDataGraph,
+      markPoint: { data: getMarkPointData(chartStore.outgoingDataGraph) },
       markLine: {
         data: [{ type: 'average', name: 'Avg' }]
       }
@@ -145,48 +141,63 @@ const option2 = {
 
 onMounted( async () => {
     // await authStore.getUser()
+    await chartStore.fetchDashboardData();
 })
 </script>
 <template>
-  <div class="">
+  <div class="" v-if="chartStore.dashboardData">
     <div class="uk-flex uk-flex-between">
       <div class="info-card">
         <div class="info-ttl">Total stok</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="1300" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="chartStore.totalQty" :duration="1000" separator="" /></div>
           <IconBox :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
-        <span class="info-desc">strip/blister/tube</span>
+        <span class="info-desc">tablet/kaplet/kapsul</span>
       </div>                
       <div class="info-card">
         <div class="info-ttl">Barang masuk</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="150" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="chartStore.currentIncomingGoods" :duration="1000" separator="" /></div>
           <IconPackageImport :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
         <div>
           <span class="info-desc">vs bulan lalu</span>
-          <span class="info-desc" style="color: #27ae60;font-weight: 500;"> +10%</span>
+          <span class="info-desc" 
+          :style="chartStore.percentageChangeIncoming > 0 ? { color: '#27ae60' } : { color: '#e74c3c' }"> 
+            {{ chartStore.percentageChangeIncoming }}%
+          </span>
         </div>
       </div>                
       <div class="info-card">
         <div class="info-ttl">Barang keluar</div>
         <div class="uk-flex uk-flex-between uk-text-center">
-          <div class="info-num"><CountTo :endVal="80" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="chartStore.currentOutgoingGoods" :duration="1000" separator="" /></div>
           <IconPackageExport :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
         <span class="info-desc">vs bulan lalu</span>
-        <span class="info-desc" style="color: #e74c3c;font-weight: 500;"> -10%</span>
+        <span class="info-desc" 
+          :style="chartStore.percentageChangeOutgoing > 0 ? { color: '#27ae60' } : { color: '#e74c3c' }"> 
+          {{ chartStore.percentageChangeOutgoing }}%
+        </span>
       </div>                
       <div class="info-card">
         <div class="info-ttl">Barang Mendekati Kedaluwarsa</div>
         <div class="uk-flex uk-flex-between">
-          <div class="info-num"><CountTo :endVal="0" :duration="1000" separator="" /></div>
+          <div class="info-num"><CountTo :endVal="chartStore.expiringSoonCount" :duration="1000" separator="" /></div>
           <IconHourglassLow :size="52" :stroke-width="1.2" class="info-img"/>
         </div>
         <span class="info-desc">dalam 30 hari kedepan</span>
       </div>                
     </div>
+    <!-- <div class="info-card uk-margin-top">
+      <div class="info-ttl">Jumlah Barang Stok Rendah</div>
+      <div class="uk-flex uk-flex-between">
+        <div class="info-num"><CountTo :endVal="chartStore.expiringSoonCount" :duration="1000" separator="" /></div>
+        <IconAlertTriangle :size="52" :stroke-width="1.2" class="info-img"/>
+      </div>
+      <span class="info-desc">dalam 30 hari kedepan</span>
+    </div>                 -->
     <div class="uk-flex uk-margin-medium-top uk-flex-between">
         <div class="card uk-margin-small-right">
           <v-chart class="chart" :option="option2"/>
@@ -195,19 +206,14 @@ onMounted( async () => {
           <v-chart class="chart" :option="option" />  
         </div>
     </div>
-    <div class="uk-child-1-2" style="height: 500px;" uk-grid>
+    <!-- <div class="uk-child-1-2" style="height: 500px;" uk-grid>
       <div class="uk-width-1-2" style="height: 500px;">
         <v-chart class="chart" :option="option2" />
       </div>
       <div class="uk-width-1-2" style="height: 500px;">
         <v-chart class="chart" :option="option" />  
       </div>
-    </div>
-    <button @click="settingStore.toggleSidebar">Toggle</button>
-
-  <div v-show="settingStore.isSidebarOpen" style="background: lightblue; padding: 20px;">
-    Hello Sidebar
-  </div>
+    </div> -->
   </div>
 </template>
 <style  scoped>
@@ -248,6 +254,7 @@ onMounted( async () => {
 
 .info-desc {
   font-size: 12px;
+  font-weight: 500;
 }
 
 .body-info {

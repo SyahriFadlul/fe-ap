@@ -1,15 +1,17 @@
 <script setup>
 import { useUserStore } from '@/stores/user';
 import baseTable from '../../components/baseTable.vue';
-import { onMounted,watch } from 'vue';
-import { IconEye, IconTrash, IconPlus, IconSortAscending, IconFilter } from '@tabler/icons-vue';
+import { onMounted, watch, ref } from 'vue';
+import { IconEye, IconTrash, IconPlus, IconSortAscending, IconSortDescending, IconFilter } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '@/stores/auth';
 
 const userStore = useUserStore()
 const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
 
 const columns = [
   { key: 'username', label: 'Username' },
@@ -22,6 +24,29 @@ async function clickCallback(page){
     query: {...route.query, page}
   })  
 }
+
+const userQuery = ref('')
+watch(userQuery, async (newVal) => {
+  if(newVal === ''){
+    let page = 1
+    if(parseInt(route.query.page) !== 1){
+      router.push({ name: 'user.index', query: { ...route.query, page } })
+
+      return
+    }
+    await userStore.fetchUsers(page)
+  }
+})
+
+const isAscending = ref(true)
+
+watch(isAscending, (value) => {
+  userStore.userItems.sort((a, b) => {
+    return value
+      ? a.username.localeCompare(b.username)   // A → Z
+      : b.username.localeCompare(a.username)   // Z → A
+  })
+})
 
 // function deleteUser(item){
 //   Swal.fire({
@@ -65,10 +90,14 @@ onMounted( async ()=>{
 	<div>        
 		<div></div>
 		<div class="uk-flex uk-flex-bottom">
-			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nama pengguna">
+			<input type="text" class="search uk-text-italic" placeholder="Cari berdasarkan nama pengguna" v-model="userQuery"
+      @input="userStore.getUserSearch($event.target.value)">
 			<div class="uk-margin-medium-left">
-				<button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button>
-				<button class="btn-fs"><icon-sort-ascending :size="18"/></button>
+				<!-- <button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button> -->
+				<button class="btn-fs" @click="()=> isAscending = !isAscending" uk-tooltip="Urutkan Berdasarkan Abjad">
+          <icon-sort-ascending :size="18" v-show="isAscending"/>
+          <icon-sort-descending :size="18" v-show="!isAscending"/>
+        </button>
 			</div>
 			<div class="uk-margin-auto-left">
 				<RouterLink :to="{name: 'user.create'}">

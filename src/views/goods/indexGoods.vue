@@ -134,9 +134,12 @@ watch(goodsQuery, async (newVal) => {
   console.log(newVal);
   
   if(newVal === ''){
-    await goodsStore.fetchGoods(1)
     let page = 1
-    router.push({ name: 'goods.index', query: {...route.query, page} })
+    if(parseInt(route.query.page) !== 1){
+      router.push({ name: 'goods.index', query: { ...route.query, page } })
+      return
+    }
+    await goodsStore.fetchGoods(page)
   }
 })
 

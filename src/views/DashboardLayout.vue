@@ -12,6 +12,7 @@ import { useCategoryStore } from '@/stores/category';
 import { useIncomingGoodsStore } from '@/stores/incomingGoods';
 import { useOutgoingGoodsStore } from '@/stores/outgoingGoods';
 import { useUserStore } from '@/stores/user';
+import { useChartStore } from '@/stores/chart';
 
 const authStore = useAuthStore()
 const goodsStore = useGoodsStore()
@@ -23,10 +24,11 @@ const settingStore = useSettingStore()
 const userStore = useUserStore()
 const route = useRoute()
 const page = ref('')
+const chartStore = useChartStore()
 
 async function refresh(page){
   if(page.toLowerCase() === 'dashboard'){
-    
+    await chartStore.fetchDashboardData()
   }
   if(page.toLowerCase() === 'inventori'){
     await goodsStore.fetchGoods(1)
@@ -57,7 +59,8 @@ watch(() => route.fullPath,
 )
 onMounted( async () => {
   page.value = route.meta.title
-  // await settingStore.requestNotificationPermission()
+  await settingStore.requestNotificationPermission()
+  // await chartStore.fetchDashboardData()
   // settingStore.sendNotification()
 })
 </script>

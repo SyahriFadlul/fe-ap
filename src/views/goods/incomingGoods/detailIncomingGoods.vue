@@ -301,7 +301,7 @@ onMounted( async ()=>{
         <baseTable :columns="columns" :data="incomingGoodsStore.paginatedCart" :min-rows="10" :action-col-width="'120px'" class="table">
           <template #actions="{ item }">
             <button @click="incomingGoodsStore.editItemFromCart(item)" class="uk-margin-small-right btn-edit"><IconEdit :size="18"/></button>
-            <button @click="incomingGoodsStore.removeItemFromCart(item)" class="btn-del"><IconTrash :size="18"/></button>
+            <button @click="incomingGoodsStore.removeItemFromCart(item)" v-if="incomingGoodsStore.editing" class="btn-del"><IconTrash :size="18"/></button>
           </template>
         </baseTable>
         <div v-if="incomingGoodsStore.cartTotalPage > 1">

@@ -91,6 +91,7 @@ export const useGoodsStore = defineStore('goods',{
             axios.get(`api/goods?page=${page}`)
             .then( res => {
                 this.goodsList = res.data.data
+                this.totalItems = res.availableBatches
                 this.pagination.currentPage = res.data.meta.pagination.current_page
                 this.pagination.perPage = res.data.meta.pagination.per_page
                 this.pagination.totalItems = res.data.meta.pagination.total

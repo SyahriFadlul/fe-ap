@@ -1,6 +1,7 @@
 import axios from "axios";
 import { defineStore } from "pinia";
 import debounce from "lodash.debounce";
+import { icon } from "uikit";
 
 export const useIncomingGoodsStore = defineStore('incomingGoods',{
     state: () => ({
@@ -185,8 +186,19 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         },
         async exportToPDF(filter){
             console.log(filter);
-            
-            axios.post('api/incoming-goods/export-pdf', 
+
+            if(this._checkFilter(filter) === false){
+                this.Swal.fire({
+                    title: 'Gagal',
+                    icon:'error',
+                    text: 'Tanggal awal dan tanggal akhir harus diisi.', 
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+                return
+            }
+
+            axios.post('api/incoming-goods/export-pdf',
                 {
                     data : this.incomingGoodsList,
                     filters: {
@@ -210,6 +222,17 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
         async exportToExcel(filter){
             console.log(filter);
 
+            if(this._checkFilter(filter) === false){
+                this.Swal.fire({
+                    title: 'Gagal',
+                    icon:'error',
+                    text: 'Tanggal awal dan tanggal akhir harus diisi.', 
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+                return
+            }
+
             axios.post('api/incoming-goods/export-excel',
                 {
                     data : this.incomingGoodsList,
@@ -230,6 +253,12 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                 link.click()
             })
             .catch(err => console.log(err))
+        },
+        _checkFilter(filter){            
+            if(filter.startDate == null  || filter.endDate == null) {
+                return false
+            }
+            return true
         },
         showDetails(item){
             this.clearCart()
@@ -259,6 +288,7 @@ export const useIncomingGoodsStore = defineStore('incomingGoods',{
                 ...this.selectedIncomingGoods,
                 goods_id: this.selectedIncomingGoodsItems.goods_id,
                 goods: this.selectedIncomingGoodsItems.goods,
+                unit: this.selectedIncomingGoods.unit
             }               
             console.log(data);
                      

@@ -2,13 +2,14 @@
 import { useSupplierStore } from '@/stores/supplier';
 import baseTable from '../../components/baseTable.vue';
 import { onMounted, watch, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { IconEye, IconTrash, IconPlus, IconSortAscending, IconSortDescending, IconFilter } from '@tabler/icons-vue';
 import Paginate from 'vuejs-paginate-next';
 import Swal from 'sweetalert2';
 
 const supplierStore = useSupplierStore()
 const router = useRouter()
+const route = useRoute()
 
 const columns = [
   { key: 'company_name', label: 'Nama Instansi' },
@@ -61,9 +62,9 @@ const supplierQuery = ref('')
 watch(supplierQuery, async (newVal) => {
   if(newVal === ''){
     let page = 1
-    if(parseInt(router.query.page) !== 1){
-      router.push({ name: 'supplier.index', query: { ...router.query, page } })
-      
+    if(parseInt(route.query.page) !== 1){
+      router.push({ name: 'supplier.index', query: { ...route.query, page } })
+
       return
     }
     await supplierStore.fetchSuppliers(page) 
@@ -92,7 +93,7 @@ onMounted( async ()=>{
 		<div></div>
 		<div class="uk-flex uk-flex-bottom">
 			<input type="text" class="search uk-text-italic" placeholder="Cari supplier..." v-model="supplierQuery"
-      @input="supplierStore.searchSupplier($event.target.value)">
+      @input="supplierStore.getSupplierSearch($event.target.value)">
 			<div class="uk-margin-medium-left">
 				<!-- <button class="btn-fs uk-margin-small-right"><icon-filter :size="18"/></button> -->
 				<button class="btn-fs" @click="()=> isAscending = !isAscending" uk-tooltip="Urutkan Berdasarkan Abjad">

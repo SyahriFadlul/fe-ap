@@ -150,10 +150,10 @@ const columns = [
 
 watch(() => incomingGoodsStore.selectedIncomingGoodsItems,
   async (newItem) => {
-    if(item && item.goods_id){
+    if(newItem && newItem.goods_id){
       await goodsStore.fetchCurrentItemBatches(newItem.goods_id)
-      
       await unitStore.fetchGoodsUnit(newItem.goods_id)                  
+      
     }
 });
 
@@ -208,7 +208,7 @@ onMounted( async ()=>{
               <option value="null" class="uk-text-italic uk-text-capitalize" disabled selected>- - Pilih Supplier - -</option>
               <option v-for="(supplier, index ) in supplierStore.supplierItems" :key="supplier.id" 
               :value="supplier.id" >
-                {{ supplier.name }}
+                {{ supplier.company_name }}
               </option>
             </select>     
           </div> 

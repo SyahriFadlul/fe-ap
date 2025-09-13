@@ -117,16 +117,31 @@ export const useAuthStore = defineStore("auth",{
             })
         },
         async handleLogout () {
-            await axios.post('api/logout')
-            .then( res => {
-                this.authToken = []
-                this.authUser = null
-                this.authRole = []
-                this.router.push('/login')
+            this.Swal.fire({
+                title: 'Yakin ingin Keluar?',                
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, keluar!',
+                cancelButtonText: 'Batal',
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await axios.post('api/logout')
+                    .then( res => {
+                        this.authToken = []
+                        this.authUser = null
+                        this.authRole = []
+                        this.router.push('/login')
+                    })
+                    .catch( err => {
+                        Swal.fire({
+                            title: 'Gagal!',
+                            text: 'Terjadi kesalahan logout.',
+                            icon: 'error',
+                        })
+                        console.log(err.message);
+                    })
+                }
             })
-            .catch( err => {console.log(err.message);})
-                                  
-            
         },
         async handleResetPassword (data) {
             this.authError = []

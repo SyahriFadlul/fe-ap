@@ -29,7 +29,6 @@ export const useUserStore = defineStore('user',{
                 this.pagination.totalItems = res.data.meta.total
                 this.pagination.totalPage = res.data.meta.last_page
                 this.pagination.lastPage = res.data.meta.last_page
-                console.log(this.userList)
             })
             .catch( err => console.log(err)
             )
@@ -118,16 +117,21 @@ export const useUserStore = defineStore('user',{
             this.router.push({ name: 'user.detail', params: { id: item.id } });
         },
         async _fetchUserSearch(query, loading) {
-            loading(true)
+            // loading(true)
             await axios.get(`/api/users/search?query=${query}`)
             .then( res => {
-                this.resUserQuery = res.data
+                this.userList = res.data.data
+                this.pagination.currentPage = res.data.meta.current_page
+                this.pagination.perPage = res.data.meta.per_page
+                this.pagination.totalItems = res.data.meta.total
+                this.pagination.totalPage = res.data.meta.last_page
+                this.pagination.lastPage = res.data.meta.last_page
             })
             .catch( err => {
                 console.error(err)
             })
             .finally(() => {
-                loading(false)
+                // loading(false)
             })
         },
 

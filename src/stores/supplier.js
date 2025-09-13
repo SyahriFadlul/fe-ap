@@ -39,8 +39,10 @@ export const useSupplierStore = defineStore('supplier',{
         async createSupplier(data){
             this.errors = []
             await axios.post('api/supplier', {
-                name: data.name,
-                contact: data.contact,
+                company_name: data.company_name,
+                company_phone: data.company_phone,
+                contact_person_name: data.contact_person_name,
+                contact_person_phone: data.contact_person_phone,
                 note: data.note,
             })
             .then( async () =>{

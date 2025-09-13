@@ -126,7 +126,7 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
             })
         },
         async deleteOutgoingGoods(id){
-            await axios.delete(`api/incoming-goods/${id}`)
+            await axios.delete(`api/outgoing-goods/${id}`)
             .then( res => {
                 console.log(res.status);
             })
@@ -153,7 +153,16 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
             })
         },
         async exportToPDF(filter){
-            console.log('t');
+            if(this._checkFilter(filter) === false){
+                this.Swal.fire({
+                    title: 'Gagal',
+                    icon:'error',
+                    text: 'Tanggal awal dan tanggal akhir harus diisi.', 
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+                return
+            }
 
             axios.post('api/outgoing-goods/export-pdf', {
                 data : this.outgoingGoodsList,
@@ -173,6 +182,49 @@ export const useOutgoingGoodsStore = defineStore('outgoingGoods',{
                     link.click()
                 })
             .catch(err => console.log(err))
+        },
+        async exportToExcel(filter){
+            console.log(filter);
+
+            if(this._checkFilter(filter) === false){
+                this.Swal.fire({
+                    title: 'Gagal',
+                    icon:'error',
+                    text: 'Tanggal awal dan tanggal akhir harus diisi.', 
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+                return
+            }
+
+            axios.post('api/outgoing-goods/export-excel',
+                {
+                    data : this.outgoingGoodsList,
+                    filters: {
+                        start_date: filter.startDate,
+                        end_date: filter.endDate
+                    }
+                },
+                { responseType: 'blob' }
+            )
+            .then(res => {
+                console.log(res)
+                const url = window.URL.createObjectURL(new Blob([res.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `laporan-barang-keluar.xlsx`)
+                document.body.appendChild(link)
+                link.click()
+            })
+            .catch(err => console.log(err))
+        },
+        _checkFilter(filter){ 
+            console.log(filter);
+                       
+            if(filter?.startDate == null  || filter?.endDate == null) {
+                return false
+            }
+            return true
         },
         editOutgoingGoods(){
             this.editing = true

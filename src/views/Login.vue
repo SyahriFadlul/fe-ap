@@ -14,6 +14,7 @@ const togglePassword = ref(false)
 
 onMounted(async () => {
   authStore.isAuthenticated
+  authStore.authError = []
    
 })
 </script>

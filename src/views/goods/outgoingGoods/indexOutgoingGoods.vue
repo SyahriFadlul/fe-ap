@@ -32,11 +32,12 @@ function deleteOutgoingGoods(item){
           timer: 1500,
           showConfirmButton: false,
         })
-		const page = 1
-		router.push({
-			name:'outgoingGoods.index',
-			query:{...route.query, page}
-		})        
+        const page = 1
+        router.push({
+          name:'outgoingGoods.index',
+          query:{...route.query, page}
+        })
+        await outgoingGoodsStore.fetchOutgoingGoods(parseInt(page))        
       } catch (error) {
         console.log(error);
         
@@ -98,10 +99,19 @@ const columns = [
 
 async function clickCallback(page){
   router.push({
-    name: 'incomingGoods.index',
+    name: 'outgoingGoods.index',
     query: {...route.query, page}
   })  
 }
+
+watch(()=> route.query.page,
+  async (page)=>{
+    console.log('test');
+    
+    outgoingGoodsStore.pagination.currentPage = parseInt(page)    
+    await outgoingGoodsStore.fetchOutgoingGoods(parseInt(page))
+  }
+)
 
 onMounted( async () => {
   filterDate2.value.startDate = null
@@ -149,7 +159,7 @@ onMounted( async () => {
       </div>    
       <div class="uk-margin-auto-left uk-flex uk-flex-row uk-flex-middle">
         <button class="btn-add uk-flex uk-flex-middle uk-margin-right" @click="outgoingGoodsStore.exportToPDF(filterDate2)">Eksport Ke PDF</button>
-        <button class="btn-add uk-flex uk-flex-middle uk-margin-right" @click="outgoingGoodsStore.exportToExcel()">Eksport Ke Excel(.xls)</button>
+        <button class="btn-add uk-flex uk-flex-middle uk-margin-right" @click="outgoingGoodsStore.exportToExcel(filterDate2)">Eksport Ke Excel(.xls)</button>
 				<RouterLink :to="{name: 'outgoingGoods.create'}">
 					<button class="btn-add uk-flex uk-flex-middle"><icon-plus :size="18"/>Barang Keluar</button>
 				</RouterLink>
